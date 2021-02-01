@@ -30,21 +30,25 @@ namespace Hanjp
         OutputType output_type;
 
     public:
-        InputContext() {
+        InputContext() : output_type(HIRAGANA) {
             #if defined(USE_AM_CUSTOM)
-                this->am = new AutomataCustom;
+                am = new AutomataCustom;
             #else
-                this->am = new AutomataDefault;
+                am = new AutomataDefault;
             #endif
             
             keyboard = hangul_keyboard_new_from_file("keyboard.xml");
         }
         ~InputContext() {
-            delete this->am;
-            hangul_keyboard_delete(this->keyboard);
+            delete am;
+            hangul_keyboard_delete(keyboard);
         }
         std::u16string flush();
         AMSIG process(int ascii);
+        void toggle_preedit();
+        void to_hiragana_preedit();
+        void to_katakana_preedit();
+        bool replace(int start, int end, const std::u16string str);
         bool backspace();
         void set_output_type(OutputType type);
         const std::u16string& get_preedit_string() const;
