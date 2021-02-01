@@ -27,11 +27,12 @@ namespace Hanjp
             buffer.jung = 0;
             buffer.jong = 0;
         }
-        virtual AMSIG push(char32_t ch, u32string& result, u32string& hangul) = 0; //result and hangul must be empty strings
+        virtual AMSIG push(char32_t ch, std::u32string& result, std::u32string& hangul) = 0; //result and hangul must be empty strings
         virtual std::u32string flush() {
             buffer.cho = 0;
             buffer.jung = 0;
             buffer.jong = 0;
+            return {};
         }
         virtual bool backspace() = 0;
     };
@@ -41,7 +42,7 @@ namespace Hanjp
         char32_t cur;
     public:
         AutomataDefault() : cur(0) {}
-        AMSIG push(char32_t ch, u32string& result, u32string& hangul);
+        AMSIG push(char32_t ch, std::u32string& result, std::u32string& hangul);
         bool backspace();
     };
 
