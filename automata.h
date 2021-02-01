@@ -44,8 +44,8 @@ namespace Hanjp
     };
 
     /*
-        To use custom automata, write AutomataCustom class in this file and fill all member functions to automata.cpp
-        then, target that is built will contain your automata.
+        To use custom automata, define AutomataCustom class in this file and fill all member functions to automata.cpp
+        Then, built target will contain your own automata.
         The below is the template
 
         class AutomataCustom : public Automata {
