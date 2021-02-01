@@ -3,6 +3,8 @@
 
 #include <string>
 
+// popped string have to be a hiragana string(not katakana)
+
 namespace Hanjp
 {
     enum AMSIG {
@@ -25,7 +27,7 @@ namespace Hanjp
             buffer.jung = 0;
             buffer.jong = 0;
         }
-        virtual AMSIG push(char16_t ch, u16string& result) = 0;
+        virtual AMSIG push(char16_t ch, u16string& result, u16string& hangul) = 0; //result and hangul must be empty strings
         virtual std::u16string flush() {
             buffer.cho = 0;
             buffer.jung = 0;
@@ -39,7 +41,7 @@ namespace Hanjp
         char16_t cur;
     public:
         AutomataDefault() : cur(0) {}
-        AMSIG push(char16_t ch, u16string& result);
+        AMSIG push(char16_t ch, u16string& result, u16string& hangul);
         bool backspace();
     };
 

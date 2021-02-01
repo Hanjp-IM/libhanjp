@@ -18,12 +18,14 @@ namespace Hanjp
     enum OutputType {
         HIRAGANA,
         KATAKANA,
+        HALF_KATAKANA,
     };
 
     class InputContext {
     private:
         Automata* am;
         HangulKeyboard* keyboard;
+        std::u16string hangul;
         std::u16string preedit;
         std::u16string committed;
         std::u16string flush_internal();
@@ -53,6 +55,7 @@ namespace Hanjp
         void set_output_type(OutputType type);
         const std::u16string& get_preedit_string() const;
         const std::u16string& get_commit_string() const;
+        const std::u16string& get_hangul_pronunciation() const;
         OutputType get_output_type() const;
     };
 }
