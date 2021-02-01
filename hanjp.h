@@ -25,10 +25,10 @@ namespace Hanjp
     private:
         Automata* am;
         HangulKeyboard* keyboard;
-        std::u16string hangul;
-        std::u16string preedit;
-        std::u16string committed;
-        std::u16string flush_internal();
+        std::u32string hangul;
+        std::u32string preedit;
+        std::u32string committed;
+        std::u32string flush_internal();
         OutputType output_type;
 
     public:
@@ -45,17 +45,17 @@ namespace Hanjp
             delete am;
             hangul_keyboard_delete(keyboard);
         }
-        std::u16string flush();
+        std::u32string flush();
         AMSIG process(int ascii);
         void toggle_preedit();
         void to_hiragana_preedit();
         void to_katakana_preedit();
-        bool replace(int start, int end, const std::u16string str);
+        bool replace(int start, int end, const std::u32string str);
         bool backspace();
         void set_output_type(OutputType type);
-        const std::u16string& get_preedit_string() const;
-        const std::u16string& get_commit_string() const;
-        const std::u16string& get_hangul_pronunciation() const;
+        const std::u32string& get_preedit_string() const;
+        const std::u32string& get_commit_string() const;
+        const std::u32string& get_hangul_pronunciation() const;
         OutputType get_output_type() const;
     };
 }

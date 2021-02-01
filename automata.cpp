@@ -7,7 +7,7 @@ using namespace std;
 // Fill here to write your own automata
 #else
 
-AMSIG AutomataDefault::push(char16_t ch, u16string& result, u16string& hangul) {
+AMSIG AutomataDefault::push(char32_t ch, u32string& result, u32string& hangul) {
     return {};
 }
 

@@ -13,9 +13,9 @@ namespace Hanjp
     };
 
     struct HangulBuffer {
-        char16_t cho;
-        char16_t jung;
-        char16_t jong;
+        char32_t cho;
+        char32_t jung;
+        char32_t jong;
     };
 
     class Automata {
@@ -27,8 +27,8 @@ namespace Hanjp
             buffer.jung = 0;
             buffer.jong = 0;
         }
-        virtual AMSIG push(char16_t ch, u16string& result, u16string& hangul) = 0; //result and hangul must be empty strings
-        virtual std::u16string flush() {
+        virtual AMSIG push(char32_t ch, u32string& result, u32string& hangul) = 0; //result and hangul must be empty strings
+        virtual std::u32string flush() {
             buffer.cho = 0;
             buffer.jung = 0;
             buffer.jong = 0;
@@ -38,10 +38,10 @@ namespace Hanjp
     
     class AutomataDefault : public Automata {
     private:
-        char16_t cur;
+        char32_t cur;
     public:
         AutomataDefault() : cur(0) {}
-        AMSIG push(char16_t ch, u16string& result, u16string& hangul);
+        AMSIG push(char32_t ch, u32string& result, u32string& hangul);
         bool backspace();
     };
 

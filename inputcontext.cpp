@@ -3,11 +3,11 @@
 using namespace Hanjp;
 using namespace std;
 
-u16string InputContext::flush_internal() {
+u32string InputContext::flush_internal() {
     return {};
 }
 
-u16string InputContext::flush() {
+u32string InputContext::flush() {
     return {};
 }
 
@@ -23,11 +23,11 @@ void InputContext::set_output_type(OutputType type) {
     output_type = type;
 }
 
-const u16string& InputContext::get_preedit_string() const {
+const u32string& InputContext::get_preedit_string() const {
     return preedit;
 }
 
-const u16string& InputContext::get_commit_string() const {
+const u32string& InputContext::get_commit_string() const {
     return committed;
 }
 
