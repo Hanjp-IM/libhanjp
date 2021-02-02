@@ -10,7 +10,8 @@ namespace Hanjp
     enum AMSIG {
         EAT,
         POP,
-        FLAUSH
+        FLAUSH,
+        FAIL,
     };
 
     class Automata {
