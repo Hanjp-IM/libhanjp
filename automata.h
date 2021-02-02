@@ -12,15 +12,13 @@ namespace Hanjp
         POP
     };
 
-    struct HangulBuffer {
-        char32_t cho;
-        char32_t jung;
-        char32_t jong;
-    };
-
     class Automata {
     private:
-        HangulBuffer buffer;
+        struct HangulBuffer {
+            char32_t cho;
+            char32_t jung;
+            char32_t jong;
+        } buffer;
     public:
         Automata() {
             buffer.cho = 0;
