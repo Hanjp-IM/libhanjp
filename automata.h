@@ -27,6 +27,9 @@ namespace Hanjp
             buffer.jung = 0;
             buffer.jong = 0;
         }
+
+        virtual ~Automata() {}
+
         virtual AMSIG push(char32_t ch, std::u32string& result, std::u32string& hangul) = 0; //result and hangul must be empty strings
         virtual std::u32string flush() {
             buffer.cho = 0;
