@@ -58,7 +58,7 @@ AMSIG InputContext::process(int ascii) {
         case POP:
         //Nothing to do
         break;
-        case FLAUSH:
+        case FLUSH:
         //Move string preedit to committed
         flush_internal();
         break;
