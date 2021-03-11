@@ -4,6 +4,8 @@ project(libhanjp VERSION 0.1.0)
 include(CTest)
 enable_testing()
 
+add_subdirectory(test)
+
 add_library(hangul libhangul/hangul/hangulctype.c libhangul/hangul/hangulkeyboard.c)
 add_library(hanjp automata.cpp inputcontext.cpp)
 
