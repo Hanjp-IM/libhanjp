@@ -10,12 +10,12 @@ namespace Hanjp
     enum AMSIG {
         EAT,
         POP,
-        FLAUSH,
+        FLUSH,
         FAIL,
     };
 
     class Automata {
-    private:
+    protected:
         struct HangulBuffer {
             char32_t cho;
             char32_t jung;
@@ -31,22 +31,34 @@ namespace Hanjp
         virtual ~Automata() {}
 
         virtual AMSIG push(char32_t ch, std::u32string& result, std::u32string& hangul) = 0; //result and hangul must be empty strings
-        virtual std::u32string flush() {
+        virtual char32_t flush() {
             buffer.cho = 0;
             buffer.jung = 0;
             buffer.jong = 0;
-            return {};
+            return 0;
         }
-        virtual bool backspace() = 0;
+        virtual bool backspace() {
+            if(buffer.jong) {
+                buffer.jong = 0;
+                return true;
+            }
+            else if(buffer.jung){
+                buffer.jung = 0;
+                return true;
+            }
+            else if(buffer.cho){
+                buffer.cho = 0;
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
     };
     
     class AutomataDefault : public Automata {
-    private:
-        char32_t cur;
     public:
-        AutomataDefault() : cur(0) {}
         AMSIG push(char32_t ch, std::u32string& result, std::u32string& hangul);
-        bool backspace();
     };
 
     /*
@@ -55,7 +67,8 @@ namespace Hanjp
         The below is the template
 
         class AutomataCustom : public Automata {
-
+        public:
+            AMSIG push(char32_t ch, std::u32string& result, std::u32string& hangul);
         };
     */
 }
