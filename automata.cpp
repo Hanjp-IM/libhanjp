@@ -1,6 +1,6 @@
 #include "automata.h"
 #include "hangulunicode.h"
-#include "hangul.h"
+#include <hangul.h>
 
 using namespace Hanjp;
 using namespace std;

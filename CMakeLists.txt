@@ -6,7 +6,10 @@ enable_testing()
 
 add_subdirectory(test)
 
-add_library(hangul libhangul/hangul/hangulctype.c libhangul/hangul/hangulkeyboard.c libhangul/hangul/hangulinputcontext.c)
+set(hangul_USE_STATIC_LIBS OFF)
+
+find_package(hangul REQUIRED COMPONENTS libhangul)
+include_directories(${hangul_INCLUDE_DIR})
 add_library(hanjp automata.cpp inputcontext.cpp)
 
 include(CheckSymbolExists)
@@ -15,8 +18,7 @@ if(USE_AM_CUSTOM)
     target_complie_definitions(hanjp PRIVATE "USE_AM_CUSTOM")
 endif()
 
-target_include_directories(hanjp PUBLIC "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/libhangul/hangul")
-target_link_libraries(hanjp PUBLIC hangul)
+target_link_libraries(hanjp ${hangul_LIBRARYS})
 
 add_test(NAME Test_AM COMMAND test_am)
 add_test(NAME Test_IC COMMAND test_ic)

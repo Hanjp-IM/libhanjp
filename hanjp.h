@@ -3,7 +3,7 @@
 
 #include <string>
 #include "automata.h"
-#include "hangul.h"
+#include <hangul.h>
 
 namespace Hanjp
 {

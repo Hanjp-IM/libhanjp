@@ -1,8 +1,10 @@
 #include "hanjp.h"
-#include "hangulinternals.h"
 
 using namespace Hanjp;
 using namespace std;
+
+extern ucschar hangul_keyboard_get_mapping(const HangulKeyboard* keyboard,
+	    int tableid, unsigned key);
 
 static inline bool is_hiragana(char32_t ch) {
     return ch >= 0x3040 && ch <= 0x309F;
