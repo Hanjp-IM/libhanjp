@@ -20,7 +20,7 @@ jobs:
     - name: Install libhangul-dev
       working-directory: ${{github.workspace}}
       shell: bash
-      run: apt update && apt install libhangul-dev
+      run: sudo apt update && sudo apt install libhangul-dev
 
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
