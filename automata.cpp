@@ -37,8 +37,21 @@ char32_t Automata::HangulBuffer::pop() {
     return 0;
 }
 
-char32_t Automata::HangulBuffer::flush() {
+void Automata::HangulBuffer::flush(){
+    cho = 0;
+    jung = 0;
+    jung2 = 0;
+    jong = 0;
+}
+
+char32_t Automata::HangulBuffer::flush(const std::map<std::pair<char32_t, char32_t>, char32_t>& combine_map) {
     ucschar c;
+    auto it = combine_map.find(make_pair(jung, jung2));
+
+    if(it != combine_map.end()) {
+        jung = it->second;
+        jung2 = 0;
+    }
 
     c = hangul_jamo_to_syllable(cho, jung, jong);
     if(c == 0) {
@@ -213,7 +226,7 @@ AMSIG AutomataDefault::push(char32_t ch, u32string& result, u32string& hangul) {
     if(!hangul_is_jamo(ch)) {
         to_kana(result);
         result += ch;
-        hangul += buffer.flush();
+        hangul += buffer.flush(combine_map);
         hangul += ch;
         return FLUSH;
     }
@@ -223,7 +236,7 @@ AMSIG AutomataDefault::push(char32_t ch, u32string& result, u32string& hangul) {
 
         if(buffer.cho) {
             to_kana(result);
-            hangul += buffer.flush();
+            hangul += buffer.flush(combine_map);
             return POP;
         }
         else {
@@ -243,7 +256,7 @@ AMSIG AutomataDefault::push(char32_t ch, u32string& result, u32string& hangul) {
         }
 
         to_kana(result);
-        hangul += buffer.flush();
+        hangul += buffer.flush(combine_map);
         return POP;
     }
     else if(hangul_is_jongseong(ch)) {

@@ -25,7 +25,8 @@ namespace Hanjp
             char32_t jung2;
             char32_t jong;
             char32_t pop();
-            char32_t flush();
+            void flush();
+            char32_t flush(const std::map<std::pair<char32_t, char32_t>, char32_t>& combine_map);
         } buffer;
     public:
         Automata() {
