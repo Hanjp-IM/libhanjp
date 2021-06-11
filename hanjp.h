@@ -7,13 +7,8 @@
 
 namespace Hanjp
 {
-    int init() {
-        return hangul_init();
-    }
-
-    int fini() {
-        return hangul_fini();
-    }
+    int init();
+    int fini();
 
     enum OutputType {
         HIRAGANA,
@@ -32,19 +27,8 @@ namespace Hanjp
         OutputType output_type;
 
     public:
-        InputContext() : output_type(HIRAGANA) {
-            #if defined(USE_AM_CUSTOM)
-                am = new AutomataCustom;
-            #else
-                am = new AutomataDefault;
-            #endif
-            
-            keyboard = hangul_keyboard_new_from_file("keyboard.xml");
-        }
-        ~InputContext() {
-            delete am;
-            hangul_keyboard_delete(keyboard);
-        }
+        InputContext();
+        ~InputContext();
         std::u32string flush();
         AMSIG process(int ascii);
         void toggle_preedit();

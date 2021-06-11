@@ -5,6 +5,7 @@ using namespace std;
 
 extern ucschar hangul_keyboard_get_mapping(const HangulKeyboard* keyboard,
 	    int tableid, unsigned key);
+        
 
 static inline bool is_hiragana(char32_t ch) {
     return ch >= 0x3040 && ch <= 0x309F;
@@ -34,6 +35,29 @@ static inline void convert(u32string& str, OutputType type) {
             break;
         }
     }
+}
+
+int init() {
+    return hangul_init();
+}
+
+int fini() {
+    return hangul_fini();
+}
+
+InputContext::InputContext() : output_type(HIRAGANA) {
+    #if defined(USE_AM_CUSTOM)
+        am = new AutomataCustom;
+    #else
+        am = new AutomataDefault;
+    #endif
+    
+    keyboard = hangul_keyboard_new_from_file("keyboard.xml");
+}
+
+InputContext::~InputContext() {
+    delete am;
+    hangul_keyboard_delete(keyboard);
 }
 
 u32string InputContext::flush_internal() {
