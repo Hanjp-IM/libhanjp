@@ -98,6 +98,7 @@ AMSIG InputContext::process(int ascii) {
         case EAT:
         case POP:
         default:
+        break;
     }
 
     return signal;
