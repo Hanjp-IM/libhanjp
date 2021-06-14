@@ -23,12 +23,13 @@ namespace Hanjp
         std::u32string hangul;
         std::u32string preedit;
         std::u32string committed;
-        std::u32string flush_internal();
+        void flush_internal();
         OutputType output_type;
 
     public:
         InputContext();
         ~InputContext();
+        void reset();
         std::u32string flush();
         AMSIG process(int ascii);
         void toggle_preedit();

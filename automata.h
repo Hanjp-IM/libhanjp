@@ -58,6 +58,9 @@ namespace Hanjp
                 return false;
             }
         }
+        void flush() {
+            buffer.flush();
+        }
     };
     
     class AutomataDefault : public Automata {
