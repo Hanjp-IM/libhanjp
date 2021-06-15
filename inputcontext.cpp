@@ -60,12 +60,23 @@ InputContext::~InputContext() {
     hangul_keyboard_delete(keyboard);
 }
 
-u32string InputContext::flush_internal() {
-    return {};
+void InputContext::flush_internal() {
+    committed = preedit;
+    preedit.clear();
+}
+
+void InputContext::reset() {
+    am->flush(); 
+    hangul.clear();
+    preedit.clear();
+    committed.clear();
+    output_type = HIRAGANA;
 }
 
 u32string InputContext::flush() {
-    return {};
+    am->flush();
+    flush_internal();
+    return committed;
 }
 
 AMSIG InputContext::process(int ascii) {
@@ -73,34 +84,28 @@ AMSIG InputContext::process(int ascii) {
     AMSIG signal;
     u32string popped;
 
+    committed.clear();
+
     ch = hangul_keyboard_get_mapping(keyboard, 0, ascii); //get mapped ch in keyboard table
     signal = am->push(ch, popped, hangul); //push to automata and signal and results
     convert(popped, output_type); //Convert popped string to output type
     preedit += popped;
 
-
     switch(signal) {
-        case EAT:
-        case POP:
-        //Nothing to do
-        break;
         case FLUSH:
-        //Move string preedit to committed
         flush_internal();
         break;
+        case EAT:
+        case POP:
         default:
-        return FAIL;
+        break;
     }
 
     return signal;
 }
 
 bool InputContext::backspace() {
-    bool res;
-
-    res = am->backspace();
-
-    if(!res) {
+    if(!am->backspace()) {
         if(preedit.empty()) {
             return false;
         }

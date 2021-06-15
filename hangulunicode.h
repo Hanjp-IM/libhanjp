@@ -1,3 +1,6 @@
+#ifndef HANGULUNICODE
+#define HANGULUNICODE
+
 //The belows are Unicode presets for Hangul
 
 enum HangulChoseong {
@@ -46,3 +49,5 @@ enum HangulJungseong {
     HANGUL_JUNGSEONG_YI = 0x1174, // ㅢ
     HANGUL_JUNGSEONG_WEO = 0x116F, // 
 };
+
+#endif
