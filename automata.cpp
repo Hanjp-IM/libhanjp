@@ -119,6 +119,11 @@ void AutomataDefault::to_kana(u32string& dest) {
             jung2 = 0;
         }
 
+        if(jung == 0) {
+            jung = jung2;
+            jung2 = 0;
+        }
+
         //select column index
         switch(jung) {
             case 0:
