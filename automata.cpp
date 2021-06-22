@@ -91,10 +91,6 @@ static const char32_t kana_table[][5] = {
 
 static const char32_t kana_nn = 0x3093;
 
-#if defined(USE_AM_CUSTOM)
-// Fill here if you want to write your own automata
-#else
-
 void AutomataDefault::to_kana(u32string& dest) {
     int i, j;
     int adj;
@@ -278,5 +274,3 @@ AutomataDefault::AutomataDefault() {
 }
 
 AutomataDefault::~AutomataDefault() {}
-
-#endif
