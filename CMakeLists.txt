@@ -9,13 +9,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(hangul libhangul REQUIRED)
 add_library(hanjp STATIC automata.cpp inputcontext.cpp keyboard.cpp)
 target_include_directories(hanjp PUBLIC ${hangul_INCLUDE_DIRS})
-target_link_libraries(hanjp ${hangul_LIBRARYS})
-
-include(CheckSymbolExists)
-check_symbol_exists(AutomataCustom "automata.h" USE_AM_CUSTOM)
-if(USE_AM_CUSTOM)
-    target_complie_definitions(hanjp PRIVATE "USE_AM_CUSTOM")
-endif()
+target_link_libraries(hanjp ${hangul_LIBRARIES})
 
 add_subdirectory(test)
 
