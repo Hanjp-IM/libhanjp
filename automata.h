@@ -3,18 +3,12 @@
 
 #include <string>
 #include <map>
+#include "hanjp.h"
 
 // popped string have to be a hiragana string(not katakana)
 
 namespace Hanjp
 {
-    enum AMSIG {
-        EAT,
-        POP,
-        FLUSH,
-        FAIL,
-    };
-
     class Automata {
     protected:
         std::map<std::pair<char32_t, char32_t>, char32_t> combine_map;

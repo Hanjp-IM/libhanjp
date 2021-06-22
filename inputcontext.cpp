@@ -1,10 +1,10 @@
 #include "hanjp.h"
+#include <hangul.h>
+#include "keyboard.h"
+#include "automata.h"
 
 using namespace Hanjp;
 using namespace std;
-
-extern ucschar hangul_keyboard_get_mapping(const HangulKeyboard* keyboard,
-	    int tableid, unsigned key);
         
 
 static inline bool is_hiragana(char32_t ch) {
@@ -46,18 +46,13 @@ int fini() {
 }
 
 InputContext::InputContext() : output_type(HIRAGANA) {
-    #if defined(USE_AM_CUSTOM)
-        am = new AutomataCustom;
-    #else
-        am = new AutomataDefault;
-    #endif
-    
-    keyboard = hangul_keyboard_new_from_file("keyboard.xml");
+    am = new AutomataDefault;
+    keyboard = new Keyboard;
 }
 
 InputContext::~InputContext() {
     delete am;
-    hangul_keyboard_delete(keyboard);
+    delete keyboard;
 }
 
 void InputContext::flush_internal() {
@@ -86,7 +81,7 @@ AMSIG InputContext::process(int ascii) {
 
     committed.clear();
 
-    ch = hangul_keyboard_get_mapping(keyboard, 0, ascii); //get mapped ch in keyboard table
+    ch = keyboard->get_mapping(0, ascii);
     signal = am->push(ch, popped, hangul); //push to automata and signal and results
     convert(popped, output_type); //Convert popped string to output type
     preedit += popped;

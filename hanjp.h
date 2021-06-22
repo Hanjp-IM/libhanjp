@@ -2,8 +2,6 @@
 #define HANJP
 
 #include <string>
-#include "automata.h"
-#include <hangul.h>
 
 namespace Hanjp
 {
@@ -16,10 +14,20 @@ namespace Hanjp
         HALF_KATAKANA,
     };
 
+    enum AMSIG {
+        EAT,
+        POP,
+        FLUSH,
+        FAIL,
+    };
+
+    class Automata;
+    class Keyboard;
+
     class InputContext {
     private:
         Automata* am;
-        HangulKeyboard* keyboard;
+        Keyboard* keyboard;
         std::u32string hangul;
         std::u32string preedit;
         std::u32string committed;
