@@ -5,7 +5,11 @@
 using namespace Hanjp;
 using namespace std;
 
-extern ucschar hangul_jongseong_to_choseong(ucschar c);
+extern "C" {
+    ucschar hangul_jongseong_to_choseong(ucschar c);
+}
+
+
 
 char32_t Automata::HangulBuffer::pop() {
     char32_t ret;
