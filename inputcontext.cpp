@@ -37,11 +37,11 @@ static inline void convert(u32string& str, OutputType type) {
     }
 }
 
-int init() {
+int Hanjp::init() {
     return hangul_init();
 }
 
-int fini() {
+int Hanjp::fini() {
     return hangul_fini();
 }
 

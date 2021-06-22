@@ -3,8 +3,11 @@
 
 using namespace Hanjp;
 
-extern ucschar hangul_keyboard_get_mapping(const HangulKeyboard* keyboard,
+extern "C" {
+    ucschar hangul_keyboard_get_mapping(const HangulKeyboard* keyboard,
 	    int tableid, unsigned key);
+} 
+
 
 Keyboard::Keyboard() {
     keyboard = hangul_keyboard_new_from_file("keyboard.xml");
