@@ -50,6 +50,11 @@ InputContext::InputContext() : output_type(HIRAGANA) {
     keyboard = new Keyboard;
 }
 
+InputContext::InputContext(const InputContext& copy) : output_type(HIRAGANA) {
+    // It doesn't allow to use
+    InputContext();
+}
+
 InputContext::~InputContext() {
     delete am;
     delete keyboard;

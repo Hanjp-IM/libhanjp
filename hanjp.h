@@ -36,6 +36,7 @@ namespace Hanjp
 
     public:
         InputContext();
+        InputContext(const InputContext& copy);
         ~InputContext();
         void reset();
         std::u32string flush();
