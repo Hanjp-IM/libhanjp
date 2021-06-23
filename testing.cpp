@@ -20,6 +20,10 @@ protected:
         context.reset();
     }
 
+    void TearDown() override {
+        fini();
+    }
+
     InputContext context;
 };
 
