@@ -33,7 +33,3 @@ target_link_libraries(testing PUBLIC hanjp gtest_main ${GLib_LIBRARIES})
 
 include(GoogleTest)
 gtest_discover_tests(testing)
-
-add_executable(libtest libtest.cpp)
-target_include_directories(libtest PUBLIC ${GLib_INCLUDE_DIRS})
-target_link_libraries(libtest PUBLIC hanjp ${GLib_LIBRARIES})
