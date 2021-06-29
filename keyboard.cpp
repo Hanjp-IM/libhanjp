@@ -4,8 +4,7 @@
 using namespace Hanjp;
 
 extern "C" {
-    ucschar hangul_keyboard_get_mapping(const HangulKeyboard* keyboard,
-	    int tableid, unsigned key);
+    ucschar hangul_keyboard_get_mapping(const HangulKeyboard* keyboard, int tableid, unsigned key);
 } 
 
 

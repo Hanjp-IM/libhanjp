@@ -5,9 +5,13 @@ set(hangul_USE_STATIC_LIBS OFF)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(hangul libhangul REQUIRED)
+pkg_check_modules(GLib REQUIRED glib-2.0)
 add_library(hanjp automata.cpp inputcontext.cpp keyboard.cpp)
 target_include_directories(hanjp PUBLIC ${hangul_INCLUDE_DIRS})
 target_link_libraries(hanjp ${hangul_LIBRARIES})
+
+configure_file(keyboard.xml ${CMAKE_CURRENT_BINARY_DIR}/keyboard.xml COPYONLY)
+configure_file(combination.xml ${CMAKE_CURRENT_BINARY_DIR}/combination.xml COPYONLY)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -24,7 +28,12 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(testing testing.cpp)
-target_link_libraries(testing PUBLIC hanjp gtest_main)
+target_include_directories(testing PUBLIC ${GLib_INCLUDE_DIRS})
+target_link_libraries(testing PUBLIC hanjp gtest_main ${GLib_LIBRARIES})
 
 include(GoogleTest)
 gtest_discover_tests(testing)
+
+add_executable(libtest libtest.cpp)
+target_include_directories(libtest PUBLIC ${GLib_INCLUDE_DIRS})
+target_link_libraries(libtest PUBLIC hanjp ${GLib_LIBRARIES})

@@ -9,8 +9,6 @@ extern "C" {
     ucschar hangul_jongseong_to_choseong(ucschar c);
 }
 
-
-
 char32_t Automata::HangulBuffer::pop() {
     char32_t ret;
 
@@ -228,6 +226,7 @@ void AutomataDefault::to_kana(u32string& dest) {
 }
 
 AMSIG AutomataDefault::push(char32_t ch, u32string& result, u32string& hangul) {
+    AMSIG signal;
     if(!hangul_is_jamo(ch)) {
         to_kana(result);
         result += ch;
@@ -237,16 +236,17 @@ AMSIG AutomataDefault::push(char32_t ch, u32string& result, u32string& hangul) {
     }
 
     if(hangul_is_choseong(ch)) {
-        buffer.cho = ch;
-
         if(buffer.cho) {
             to_kana(result);
             hangul += buffer.flush(combine_map);
-            return POP;
+            signal = POP;
         }
         else {
-            return EAT;
+            signal = EAT;
         }
+        buffer.cho = ch;
+
+        return signal;
     }
     else if(hangul_is_jungseong(ch)) {
         if(buffer.jung) {

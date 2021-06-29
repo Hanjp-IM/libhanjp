@@ -74,7 +74,7 @@ void InputContext::reset() {
 }
 
 u32string InputContext::flush() {
-    am->flush();
+    preedit += am->flush();
     flush_internal();
     return committed;
 }
@@ -93,11 +93,12 @@ AMSIG InputContext::process(int ascii) {
 
     switch(signal) {
         case FLUSH:
-        flush_internal();
-        break;
-        case EAT:
         case POP:
+        flush_internal();
+        case EAT:
+        break;
         default:
+        flush();
         break;
     }
 

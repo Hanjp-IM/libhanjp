@@ -52,8 +52,8 @@ namespace Hanjp
                 return false;
             }
         }
-        void flush() {
-            buffer.flush();
+        char32_t flush() {
+            return buffer.flush(combine_map);
         }
     };
     
