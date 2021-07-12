@@ -19,6 +19,6 @@ Keyboard::~Keyboard() {
 void Keyboard::reset() {}
 
 char32_t Keyboard::get_mapping(int tableid, int ascii) {
-    return hangul_keyboard_get_mapping(keyboard, tableid, ascii);
+    return (char32_t)hangul_keyboard_get_mapping(keyboard, tableid, ascii);
 }
 

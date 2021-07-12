@@ -50,4 +50,23 @@ enum HangulJungseong {
     HANGUL_JUNGSEONG_WEO = 0x116F, // 
 };
 
+enum HangulJongseong {
+    HANGUL_JONGSEONG_KIYEOK = 0x11A8,       // ㄱ
+    HANGUL_JONGSEONG_SSANGKIYEOK = 0x11A9,  // ㄲ
+    HANGUL_JONGSEONG_NIEUN = 0x11AB,        // ㄴ
+    HANGUL_JONGSEONG_TIKEUT = 0x11AE,       // ㄷ
+    HANGUL_JONGSEONG_RIEUL = 0x11AF,        // ㄹ
+    HANGUL_JONGSEONG_MIEUM = 0x11B7,        // ㅁ
+    HANGUL_JONGSEONG_PIEUP = 0x11B8,        // ㅂ
+    HANGUL_JONGSEONG_SIOS = 0x11BA,         // ㅅ
+    HANGUL_JONGSEONG_SSANGSIOS = 0x11BB,    // ㅆ
+    HANGUL_JONGSEONG_IEUNG = 0x11BC,        // ㅇ
+    HANGUL_JONGSEONG_CIEUC = 0x11BD,        // ㅈ
+    HANGUL_JONGSEONG_CHIEUCH = 0x11BE,      // ㅊ 
+    HANGUL_JONGSEONG_KHIEUKH = 0x11BF,      // ㅋ
+    HANGUL_JONGSEONG_THIEUTH = 0x11C0,      // ㅌ
+    HANGUL_JONGSEONG_PHIEUPH = 0x11C1,      // ㅍ
+    HANGUL_JONGSEONG_HIEUH = 0x11C2,        // ㅎ
+};
+
 #endif

@@ -6,6 +6,7 @@ using namespace Hanjp;
 using namespace std;
 
 extern "C" {
+    ucschar hangul_choseong_to_jongseong(ucschar c);
     ucschar hangul_jongseong_to_choseong(ucschar c);
 }
 
@@ -15,28 +16,24 @@ char32_t Automata::HangulBuffer::pop() {
     if(jong) {
         ret = jong;
         jong = 0;
-        return ret;
     }
-
-    if(jung2) {
+    else if(jung2) {
         ret = jung2;
         jung2 = 0;
-        return ret;
     }
-
-    if(jung) {
+    else if(jung) {
         ret = jung;
         jung = 0;
-        return ret;
     }
-
-    if(cho) {
+    else if(cho) {
         ret = cho;
         cho = 0;
-        return ret;
+    }
+    else {
+        ret = 0;
     }
 
-    return 0;
+    return ret;
 }
 
 void Automata::HangulBuffer::flush(){
@@ -93,89 +90,28 @@ static const char32_t kana_table[][5] = {
 
 static const char32_t kana_nn = 0x3093;
 
-void AutomataDefault::to_kana(u32string& dest) {
+void Automata::to_kana(std::u32string& dest, char32_t cho, char32_t jung, char32_t jung2, char32_t jong) {
     int i, j;
     int adj;
-    char32_t cho, jung, jung2, jong;
     map<pair<char32_t, char32_t>,char32_t>::iterator it;
-    bool is_y, is_w;
-
-    cho = buffer.cho;
-    jung = buffer.jung;
-    jung2 = buffer.jung2;
-    jong = buffer.jong;
+    bool jung_void;
 
     while(cho || jung || jong) {
-        i = 0, j = 0;
         adj = 0;
-        is_y = false, is_w = false;
+        jung_void = false;
 
-        it = combine_map.find(make_pair(jung, jung2));
-
-        if(it != combine_map.end()) {
-            jung = it->second;
-            jung2 = 0;
-        }
-
-        if(jung == 0) {
-            jung = jung2;
-            jung2 = 0;
-        }
-
-        //select column index
-        switch(jung) {
-            case 0:
-            case HANGUL_JUNGSEONG_FILLER:
-            break;
-            case HANGUL_JUNGSEONG_YA:
-            is_y = true;
-            case HANGUL_JUNGSEONG_A:
-            j = 0; break;
-            case HANGUL_JUNGSEONG_YE:
-            case HANGUL_JUNGSEONG_YAE:
-            case HANGUL_JUNGSEONG_I:
-            j = 1; break;
-            case HANGUL_JUNGSEONG_YU:
-            is_y = true;
-            case HANGUL_JUNGSEONG_EU:
-            case HANGUL_JUNGSEONG_U:
-            j = 2; break;
-            case HANGUL_JUNGSEONG_AE:
-            case HANGUL_JUNGSEONG_E:
-            j = 3; break;
-            case HANGUL_JUNGSEONG_WA:
-            is_w = true;
-            case HANGUL_JUNGSEONG_YO:
-            case HANGUL_JUNGSEONG_YEO:
-            is_y = !is_w;
-            case HANGUL_JUNGSEONG_EO:
-            case HANGUL_JUNGSEONG_O:
-            j = 4; break;
-            default:
-            return;
-        }
-
-        //select row index
+        // select row index
         switch(cho) {
             case 0:
-            case HANGUL_CHOSEONG_FILLER:
+            case HANGUL_CHOSEONG_FILLER:        // VOID
             adj = -1;
             case HANGUL_CHOSEONG_IEUNG:         // ㅇ
-            if(is_w) {
-                i = 9;
-            }
-            else if(is_y) {
-                i = 7;
-            }
-            else {
-                i = 0;
-            }
-            break;
+            i = 0; break;
             case HANGUL_CHOSEONG_KIYEOK:        // ㄱ
-            adj = -1;
+            adj = 1;
             case HANGUL_CHOSEONG_KHIEUKH:       // ㅋ
             case HANGUL_CHOSEONG_SSANGKIYEOK:   // ㄲ
-            i = 1; break;   //K
+            i = 1; break;   // K
             case HANGUL_CHOSEONG_CIEUC:         // ㅈ
             adj = 1;
             case HANGUL_CHOSEONG_SIOS:          // ㅅ
@@ -199,34 +135,128 @@ void AutomataDefault::to_kana(u32string& dest) {
             case HANGUL_CHOSEONG_RIEUL:         // ㄹ
             i = 8; break;   // R
             case HANGUL_CHOSEONG_SSANGNIEUN:
-            dest += kana_nn; return;
+            cho = 0;
+            dest += kana_nn;
+            continue;
+            default: return;
+        }
+
+        if(jung == 0) {
+            jung = jung2;
+        }
+        else {
+            it = combine_map.find(make_pair(jung, jung2));
+            if(it != combine_map.end()) {
+                jung = it->second;
+            }
+        }
+        jung2 = 0;
+
+        // divide jungseong
+        switch(jung) {
+            case 0:
+            case HANGUL_JUNGSEONG_FILLER:
+            jung_void = true; break;
+            case HANGUL_JUNGSEONG_WA:
+            if(i == 0){
+                i = 9;
+            }
+            else {
+                jung = HANGUL_JUNGSEONG_O;
+                jung2 = HANGUL_JUNGSEONG_A;
+            }
+            break;
+            case HANGUL_JUNGSEONG_YA:
+            case HANGUL_JUNGSEONG_YU:
+            case HANGUL_JUNGSEONG_YO:
+            case HANGUL_JUNGSEONG_YEO:
+            if(i == 0) {
+                i = 7;
+            }
+            else{
+                jung = HANGUL_JUNGSEONG_I;
+                jung2 = jung;
+            }
+            break;
+            case HANGUL_JUNGSEONG_YE:
+            case HANGUL_JUNGSEONG_YAE:
+            jung = HANGUL_JUNGSEONG_I;
+            jung2 = HANGUL_JUNGSEONG_E;
+            break;
+            default:
+            jung = 0;
+        }
+        //select column index
+        switch(jung) {
+            case HANGUL_JUNGSEONG_WA:
+            case HANGUL_JUNGSEONG_YA:
+            case HANGUL_JUNGSEONG_A:
+            j = 0; break;
+            case HANGUL_JUNGSEONG_I:
+            j = 1; break;
+            case HANGUL_JUNGSEONG_YU:
+            case HANGUL_JUNGSEONG_EU:
+            case HANGUL_JUNGSEONG_U:
+            case HANGUL_JUNGSEONG_FILLER:
+            case 0:
+            j = 2; break;
+            case HANGUL_JUNGSEONG_AE:
+            case HANGUL_JUNGSEONG_E:
+            j = 3; break;
+            case HANGUL_JUNGSEONG_YO:
+            case HANGUL_JUNGSEONG_YEO:
+            case HANGUL_JUNGSEONG_EO:
+            case HANGUL_JUNGSEONG_O:
+            j = 4; break;
             default:
             return;
         }
 
-        cho = 0;
-
-        if(is_y && i != 7) {
-            jung = buffer.jung;
-        }
-        else if(is_w && i != 9) {
-            jung = HANGUL_JUNGSEONG_A;
+        // append taken kana charactor
+        if(jong == 0 && jung_void && !dest.empty()) {
+            const char32_t c = dest.back();
+            if(c != kana_nn && c != kana_table[3][2] - 1) {
+                jong = hangul_choseong_to_jongseong(cho);
+            }
         }
         else {
-            jung = 0;
+            dest += kana_table[i][j] + adj;
         }
 
+        // eat choseong
+        cho = 0;
+        // eat jungseong
+        jung = 0;
+        // eat jongseong
         if(jung == 0) {
-            cho = hangul_jongseong_to_choseong(jong);
+            switch(jong) {
+                case HANGUL_JONGSEONG_KIYEOK:
+                case HANGUL_JONGSEONG_SSANGKIYEOK:
+                case HANGUL_JONGSEONG_SIOS:
+                case HANGUL_JONGSEONG_SSANGSIOS:
+                case HANGUL_JONGSEONG_KHIEUKH:
+                dest += kana_table[3][2] - 1; break;
+                case HANGUL_JONGSEONG_NIEUN:
+                case HANGUL_JONGSEONG_MIEUM:
+                case HANGUL_JONGSEONG_PIEUP:
+                case HANGUL_JONGSEONG_PHIEUPH:
+                case HANGUL_JONGSEONG_IEUNG:
+                dest += kana_nn; break;
+                default:
+                cho = hangul_jongseong_to_choseong(jong);
+            }
             jong = 0;
         }
-
-        dest += kana_table[i][j] + adj;
     }
+}
+
+void AutomataDefault::to_kana(u32string& dest) {
+    Automata::to_kana(dest, buffer.cho, buffer.jung, buffer.jung2, buffer.jong);
 }
 
 AMSIG AutomataDefault::push(char32_t ch, u32string& result, u32string& hangul) {
     AMSIG signal;
+
     if(!hangul_is_jamo(ch)) {
         to_kana(result);
         result += ch;
@@ -245,8 +275,6 @@ AMSIG AutomataDefault::push(char32_t ch, u32string& result, u32string& hangul) {
             signal = EAT;
         }
         buffer.cho = ch;
-
-        return signal;
     }
     else if(hangul_is_jungseong(ch)) {
         if(buffer.jung) {
@@ -257,24 +285,27 @@ AMSIG AutomataDefault::push(char32_t ch, u32string& result, u32string& hangul) {
         }
 
         if(buffer.jung2 == 0 && buffer.jung == HANGUL_JUNGSEONG_O) {
-            return EAT;
+            signal = EAT;
         }
-
-        to_kana(result);
-        hangul += buffer.flush(combine_map);
-        return POP;
+        else {
+            to_kana(result);
+            hangul += buffer.flush(combine_map);
+            signal = POP;
+        }
     }
     else if(hangul_is_jongseong(ch)) {
-        return push(hangul_jongseong_to_choseong(ch), result, hangul);
+        signal = push(hangul_jongseong_to_choseong(ch), result, hangul);
     }
     else {
         buffer.flush();
-        return FAIL;
+        signal = FAIL;
     }
+
+    return signal;
 }
 
 AutomataDefault::AutomataDefault() {
-    combine_map.insert(make_pair(make_pair(HANGUL_JUNGSEONG_O, HANGUL_JUNGSEONG_A), HANGUL_JUNGSEONG_WA));
+    combine_map.insert(make_pair(make_pair(HANGUL_JUNGSEONG_O, HANGUL_JUNGSEONG_A), HANGUL_JUNGSEONG_WA)); // ㅗ + ㅏ -> ㅘ
 }
 
 AutomataDefault::~AutomataDefault() {}

@@ -93,8 +93,8 @@ AMSIG InputContext::process(int ascii) {
 
     switch(signal) {
         case FLUSH:
-        case POP:
         flush_internal();
+        case POP:
         case EAT:
         break;
         default:
@@ -110,7 +110,6 @@ bool InputContext::backspace() {
         if(preedit.empty()) {
             return false;
         }
-
         preedit.pop_back();
     }
 

@@ -33,7 +33,7 @@ namespace Hanjp
         std::u32string committed;
         void flush_internal();
         OutputType output_type;
-
+        
     public:
         InputContext();
         InputContext(const InputContext& copy);
