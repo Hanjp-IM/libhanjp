@@ -136,7 +136,7 @@ void Automata::to_kana(std::u32string& dest, char32_t cho, char32_t jung, char32
             i = 8; break;   // R
             case HANGUL_CHOSEONG_SSANGNIEUN:
             cho = 0;
-            dest += kana_nn;
+            dest.push_back(kana_nn);
             continue;
             default: return;
         }
@@ -220,7 +220,7 @@ void Automata::to_kana(std::u32string& dest, char32_t cho, char32_t jung, char32
             }
         }
         else {
-            dest += kana_table[i][j] + adj;
+            dest.push_back(kana_table[i][j] + adj);
         }
 
         // eat choseong
@@ -235,13 +235,13 @@ void Automata::to_kana(std::u32string& dest, char32_t cho, char32_t jung, char32
                 case HANGUL_JONGSEONG_SIOS:
                 case HANGUL_JONGSEONG_SSANGSIOS:
                 case HANGUL_JONGSEONG_KHIEUKH:
-                dest += kana_table[3][2] - 1; break;
+                dest.push_back(kana_table[3][2] - 1); break;
                 case HANGUL_JONGSEONG_NIEUN:
                 case HANGUL_JONGSEONG_MIEUM:
                 case HANGUL_JONGSEONG_PIEUP:
                 case HANGUL_JONGSEONG_PHIEUPH:
                 case HANGUL_JONGSEONG_IEUNG:
-                dest += kana_nn; break;
+                dest.push_back(kana_nn); break;
                 default:
                 cho = hangul_jongseong_to_choseong(jong);
             }
