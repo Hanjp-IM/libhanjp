@@ -17,7 +17,6 @@ namespace Hanjp
     enum AMSIG {
         EAT,
         POP,
-        FLUSH,
         FAIL,
     };
 

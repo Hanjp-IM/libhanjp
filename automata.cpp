@@ -90,7 +90,7 @@ static const char32_t kana_table[][5] = {
 
 static const char32_t kana_nn = 0x3093;
 
-void Automata::to_kana(std::u32string& dest, char32_t cho, char32_t jung, char32_t jung2, char32_t jong) {
+bool Automata::to_kana(std::u32string& dest, char32_t cho, char32_t jung, char32_t jung2, char32_t jong) {
     int i, j;
     int adj;
     map<pair<char32_t, char32_t>,char32_t>::iterator it;
@@ -138,7 +138,8 @@ void Automata::to_kana(std::u32string& dest, char32_t cho, char32_t jung, char32
             cho = 0;
             dest.push_back(kana_nn);
             continue;
-            default: return;
+            default:
+            return false;
         }
 
         if(jung == 0) {
@@ -209,7 +210,7 @@ void Automata::to_kana(std::u32string& dest, char32_t cho, char32_t jung, char32
             case HANGUL_JUNGSEONG_O:
             j = 4; break;
             default:
-            return;
+            return false;
         }
 
         // append taken kana charactor
@@ -248,27 +249,23 @@ void Automata::to_kana(std::u32string& dest, char32_t cho, char32_t jung, char32
             jong = 0;
         }
     }
+
+    return true;
 }
 
-void AutomataDefault::to_kana(u32string& dest) {
-    Automata::to_kana(dest, buffer.cho, buffer.jung, buffer.jung2, buffer.jong);
+bool AutomataDefault::to_kana(u32string& dest) {
+    return Automata::to_kana(dest, buffer.cho, buffer.jung, buffer.jung2, buffer.jong);
 }
 
 AMSIG AutomataDefault::push(char32_t ch, u32string& result, u32string& hangul) {
     AMSIG signal;
 
-    if(!hangul_is_jamo(ch)) {
-        to_kana(result);
-        result += ch;
-        hangul += buffer.flush(combine_map);
-        hangul += ch;
-        return FLUSH;
-    }
-
     if(hangul_is_choseong(ch)) {
         if(buffer.cho) {
-            to_kana(result);
-            hangul += buffer.flush(combine_map);
+            if(!to_kana(result)){
+                return FAIL;
+            }
+            hangul.push_back(buffer.flush(combine_map));
             signal = POP;
         }
         else {
@@ -288,8 +285,10 @@ AMSIG AutomataDefault::push(char32_t ch, u32string& result, u32string& hangul) {
             signal = EAT;
         }
         else {
-            to_kana(result);
-            hangul += buffer.flush(combine_map);
+            if(!to_kana(result)) {
+                return FAIL;
+            }
+            hangul.push_back(buffer.flush(combine_map));
             signal = POP;
         }
     }
@@ -297,7 +296,10 @@ AMSIG AutomataDefault::push(char32_t ch, u32string& result, u32string& hangul) {
         signal = push(hangul_jongseong_to_choseong(ch), result, hangul);
     }
     else {
-        buffer.flush();
+        to_kana(result);
+        result.push_back(ch);
+        hangul.push_back(buffer.flush(combine_map));
+        hangul.push_back(ch);
         signal = FAIL;
     }
 

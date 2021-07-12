@@ -17,26 +17,6 @@ static inline bool is_katakana(char32_t ch) {
 
 #define KANA_GAP 0x60
 
-static inline void convert(u32string& str, OutputType type) {
-    for(auto& ch : str) {
-        switch(type) {
-            case HIRAGANA:
-            if(is_katakana(ch)) {
-                ch -= KANA_GAP;
-            }
-            break;
-            case KATAKANA:
-            if(is_hiragana(ch)) {
-                ch += KANA_GAP;
-            }
-            break;
-            case HALF_KATAKANA:
-            default:
-            break;
-        }
-    }
-}
-
 int Hanjp::init() {
     return hangul_init();
 }
@@ -82,24 +62,35 @@ u32string InputContext::flush() {
 AMSIG InputContext::process(int ascii) {
     char32_t ch;
     AMSIG signal;
-    u32string popped;
+    int prev_idx;
 
     committed.clear();
 
     ch = keyboard->get_mapping(0, ascii);
-    signal = am->push(ch, popped, hangul); //push to automata and signal and results
-    convert(popped, output_type); //Convert popped string to output type
-    preedit += popped;
+    prev_idx = preedit.length();
+    signal = am->push(ch, preedit, hangul); //push to automata and signal and results
+    //Convert popped string to output type
+    for(int i = prev_idx; preedit[i]; i++) {
+        switch(output_type) {
+            case KATAKANA:
+            if(is_hiragana(ch)) {
+                ch += KANA_GAP;
+            }
+            break;
+            case HALF_KATAKANA:
+            case HIRAGANA:
+            default:
+        }
+    }
 
     switch(signal) {
-        case FLUSH:
+        case FAIL:
         flush_internal();
         case POP:
         case EAT:
         break;
         default:
         flush();
-        break;
     }
 
     return signal;

@@ -28,7 +28,7 @@ namespace Hanjp
             buffer.jung = 0;
             buffer.jong = 0;
         }
-        void to_kana(std::u32string& dest, char32_t cho, char32_t jung, char32_t jung2, char32_t jong);
+        bool to_kana(std::u32string& dest, char32_t cho, char32_t jung, char32_t jung2, char32_t jong);
         virtual ~Automata() {}
         virtual AMSIG push(char32_t ch, std::u32string& result, std::u32string& hangul) = 0; //result and hangul must be empty strings
         virtual bool backspace() {
@@ -59,7 +59,7 @@ namespace Hanjp
     
     class AutomataDefault : public Automata {
     private:
-        void to_kana(std::u32string& dest);
+        bool to_kana(std::u32string& dest);
     public:
         AutomataDefault();
         ~AutomataDefault();
