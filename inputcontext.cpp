@@ -80,6 +80,7 @@ AMSIG InputContext::process(int ascii) {
             case HALF_KATAKANA:
             case HIRAGANA:
             default:
+            break;
         }
     }
 
