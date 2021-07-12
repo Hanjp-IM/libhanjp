@@ -70,7 +70,7 @@ AMSIG InputContext::process(int ascii) {
     prev_idx = preedit.length();
     signal = am->push(ch, preedit, hangul); //push to automata and signal and results
     //Convert popped string to output type
-    for(int i = prev_idx; preedit[i]; i++) {
+    for(int i = prev_idx; i < preedit.length(); i++) {
         switch(output_type) {
             case KATAKANA:
             if(is_hiragana(ch)) {
