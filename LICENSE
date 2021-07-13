@@ -1,4 +1,15 @@
-                  GNU LESSER GENERAL PUBLIC LICENSE
+License used in libhanjp
+This library is strongly affected by libhangul code written by Choe Hwanjin and many contributors,
+refering code and calling subroutines to write this code.
+Thank you for their remarkable efforts.
+libhangul
+https://github.com/libhangul/libhangul
+Copyright 2005-2011 Choe Hwanjin <choe.hwanjin (at) gmail.com>
+Copyright 2005-2011 Joon-cheol Park <jooncheol (at) gmail.com>
+GNU Lesser General Public License v2.1
+
+
+              GNU LESSER GENERAL PUBLIC LICENSE
                        Version 2.1, February 1999
 
  Copyright (C) 1991, 1999 Free Software Foundation, Inc.
