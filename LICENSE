@@ -1,7 +1,10 @@
 License used in libhanjp
 This library is strongly affected by libhangul code written by Choe Hwanjin and many contributors,
-refering code and calling subroutines to write this code.
-Thank you for their remarkable efforts.
+refering the code design and calling subroutines to write this code.
+I gratefully acknowledges these and other contributions to libhanjp. 
+I recommend that programs that use libhanjp also acknowledge these contributions, 
+and quote these license statements in an appendix to the documentation.
+
 libhangul
 https://github.com/libhangul/libhangul
 Copyright 2005-2011 Choe Hwanjin <choe.hwanjin (at) gmail.com>
