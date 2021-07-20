@@ -13,26 +13,8 @@ target_link_libraries(hanjp ${hangul_LIBRARIES})
 configure_file(keyboard.xml ${CMAKE_CURRENT_BINARY_DIR}/keyboard.xml COPYONLY)
 configure_file(combination.xml ${CMAKE_CURRENT_BINARY_DIR}/combination.xml COPYONLY)
 
-set(CMAKE_CXX_STANDARD 11)
-
-include(FetchContent)
-FetchContent_Declare(
-    googletest
-    URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
-)
-
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-
-enable_testing()
-
-add_executable(testing testing.cpp)
-target_include_directories(testing PUBLIC ${GLib_INCLUDE_DIRS})
-target_link_libraries(testing PUBLIC hanjp gtest_main ${GLib_LIBRARIES})
-
-include(GoogleTest)
-gtest_discover_tests(testing)
+add_subdirectory(test EXCLUDE_FROM_ALL)
 
 install(TARGETS hanjp DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES hanjp.h automata.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES keyboard.xml combination.xml DESTINATION ${CMAKE_INSTALL_SHAREDSTATEDIR})
