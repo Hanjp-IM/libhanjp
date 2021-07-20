@@ -33,3 +33,7 @@ target_link_libraries(testing PUBLIC hanjp gtest_main ${GLib_LIBRARIES})
 
 include(GoogleTest)
 gtest_discover_tests(testing)
+
+install(TARGETS hanjp DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES hanjp.h automata.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES keyboard.xml DESTINATION ${CMAKE_INSTALL_DATADIR})
