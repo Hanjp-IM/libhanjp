@@ -1,4 +1,4 @@
-It is library implemented for Hanjp input method engines.
+It is a library implemented for Hanjp input method engines.
 It is designed on GObject type system, so that it is easily portable to many platforms.
 You can use GObject Introspection for cross-language interoperability.
 
@@ -19,7 +19,8 @@ Currently, the library depends on two packages.
 glib-2.0
 libhangul
 ```
-How we can install?
+How we can install above?
 ```
+# On ubuntu
 sudo apt update && sudo apt install libglib2.0-dev libhangul-dev
 ```
