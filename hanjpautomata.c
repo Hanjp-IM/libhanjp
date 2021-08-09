@@ -1,5 +1,5 @@
 #include "hanjpautomata.h"
-#include "hangulunicode.h"
+#include "hanjpunicode.h"
 
 G_DEFINE_INTERFACE(HanjpAutomata, hanjp_automata, G_TYPE_OBJECT)
 
