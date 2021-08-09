@@ -1,6 +1,8 @@
 #ifndef __HANJP_KEYBOARD_H__
 #define __HANJP_KEYBOARD_H__
 
+#include <glib-object.h>
+
 G_BEGIN_DECLS
 
 #define HANJP_TYPE_KEYBOARD hanjp_keyboard_get_type()
