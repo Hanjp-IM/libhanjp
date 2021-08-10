@@ -57,7 +57,7 @@ hanjp_ic_init(HanjpInputContext *self)
     priv->ams[0] = HANJP_AUTOMATA(hanjp_amdefault_new());
     priv->ams[1] = NULL;
     priv->cur_am = g_object_ref(priv->ams[0]);
-
+    priv->keyboard = HANJP_KEYBOARD(hanjp_keyboarddefault_new());
     priv->preedit = g_array_sized_new(TRUE, TRUE, sizeof(gunichar), 64);
     priv->committed = g_array_sized_new(TRUE, TRUE, sizeof(gunichar), 64);
     priv->hangul = g_array_sized_new(TRUE, TRUE, sizeof(gunichar), 64);
