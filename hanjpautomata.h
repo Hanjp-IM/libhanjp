@@ -7,9 +7,9 @@
 G_BEGIN_DECLS
 
 enum {
-    EAT,
-    POP,
-    FAIL
+    HANJP_AM_EAT,
+    HANJP_AM_POP,
+    HANJP_AM_FAIL
 };
 
 #define HANJP_TYPE_AUTOMATA hanjp_am_get_type()
