@@ -1,5 +1,5 @@
-#ifndef HANGULUNICODE
-#define HANGULUNICODE
+#ifndef __HANJP_UNICODE_H__
+#define __HANJP_UNICODE_H__
 
 //The belows are Unicode presets for Hangul
 
@@ -69,4 +69,4 @@ enum HangulJongseong {
     HANGUL_JONGSEONG_HIEUH = 0x11C2,        // ㅎ
 };
 
-#endif
+#endif // __HANJP_UNICODE_H__
