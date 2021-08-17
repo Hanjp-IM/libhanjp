@@ -1,0 +1,7 @@
+The library is strongly impacted by libhangul(the library for hangul process) refering its design and calling the code to implement this code.
+We greatfully acknowledge the their effort by including this copying file and distributing the code under LGPL v2.1 for this software.
+
+libhangul
+------------------
+LGPL-2.1 License
+https://github.com/libhangul/libhangul

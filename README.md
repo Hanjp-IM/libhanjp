@@ -3,7 +3,7 @@ It is designed on GObject type system, so that it is easily portable to many pla
 You can use GObject Introspection for cross-language interoperability.
 
 
-## How we can build?
+## How can we build?
 ```
 git clone https://github.com/Hanjp-IM/libhanjp.git
 cd libhanjp
@@ -19,7 +19,7 @@ Currently, the library depends on two packages.
 glib-2.0
 libhangul
 ```
-How we can install above?
+How can we install above?
 ```
 # On ubuntu
 sudo apt update && sudo apt install libglib2.0-dev libhangul-dev
