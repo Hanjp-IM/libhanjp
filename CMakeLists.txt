@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 project(libhanjp)
 
 set(hangul_USE_STATIC_LIBS OFF)
-set(GLib_USE_STATIC_LIBS OFF)
+set(GObject_USE_STATIC_LIBS OFF)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(hangul libhangul REQUIRED)
