@@ -49,6 +49,27 @@ gunichar hanjp_am_flush(HanjpAutomata *am) {
     iface->flush(am);
 }
 
+enum {
+    HANJP_VOWEL_A,
+    HANJP_VOWEL_I,
+    HANJP_VOWEL_U,
+    HANJP_VOWEL_E,
+    HANJP_VOWEL_O
+};
+
+enum {
+    HANJP_CONSONANT_VOID,
+    HANJP_CONSONANT_K,
+    HANJP_CONSONANT_S,
+    HANJP_CONSONANT_T,
+    HANJP_CONSONANT_N,
+    HANJP_CONSONANT_H,
+    HANJP_CONSONANT_M,
+    HANJP_CONSONANT_Y,
+    HANJP_CONSONANT_R,
+    HANJP_CONSONANT_W
+};
+
 //fifty notes
 static const gunichar kana_table[][5] = {
     // A, I, U, E, O
@@ -63,6 +84,10 @@ static const gunichar kana_table[][5] = {
     {0x3089, 0x308A, 0x308B, 0x308C, 0x308D}, // RA
     {0x308F, 0x3090, 0x0000, 0x3091, 0x3092}  // WA
 };
+
+static const gunichar kana_nn = 0x3093;
+
+// For example か(ka) = kana_table[HANJP_CONSONANT_K][HANJP_VOWEL_A]
 
 typedef struct {
     struct HangulBuffer {
