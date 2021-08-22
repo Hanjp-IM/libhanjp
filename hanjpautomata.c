@@ -180,7 +180,7 @@ hanjp_ambase_init(HanjpAutomataBase *am)
     priv->combine_table = g_hash_table_new(g_int64_hash, g_int64_equal);
 
     for(i = 0; i < N_COMBINE_TABLE_ELEMENTS; i++) {
-        g_hash_table_insert(priv->combine_table, &combine_table_keys[i], &combine_table_vals[i]);
+        g_hash_table_insert(priv->combine_table, &combine_table_keys[i].value, &combine_table_vals[i]);
     }
 }
 
