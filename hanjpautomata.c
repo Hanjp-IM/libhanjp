@@ -153,22 +153,22 @@ hanjp_ambase_flush(HanjpAutomata *am)
 
 typedef union {
     struct {
-        gunichar jong;
-        gunichar jong2;
+        gunichar jung;
+        gunichar jung2;
     } box;
     guint64 value;
-} JongBox;
+} JungBox;
 
 static void
 hanjp_ambase_init(HanjpAutomataBase *am)
 {
     int i;
-    static JongBox combine_table_keys[N_COMBINE_TABLE_ELEMENTS];
+    static JungBox combine_table_keys[N_COMBINE_TABLE_ELEMENTS];
     static guint32 combine_table_vals[N_COMBINE_TABLE_ELEMENTS];
     HanjpAutomataBasePrivate *priv;
 
-    combine_table_keys[0].box.jong = HANJP_JUNGSEONG_O;
-    combine_table_keys[0].box.jong2 = HANJP_JUNGSEONG_A;
+    combine_table_keys[0].box.jung = HANJP_JUNGSEONG_O;
+    combine_table_keys[0].box.jung2 = HANJP_JUNGSEONG_A;
     combine_table_vals[0] = HANJP_JUNGSEONG_WA;
     priv = hanjp_ambase_get_instance_private(am);
 
