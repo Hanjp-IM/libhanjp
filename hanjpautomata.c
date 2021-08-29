@@ -1,6 +1,61 @@
 #include "hanjpautomata.h"
 #include "hanjpunicode.h"
 #include <gmodule.h>
+#include <hangul.h>
+
+/* Extern function signature which isn't exported in libhangul header */
+extern ucschar hangul_choseong_to_jongseong(ucschar c);
+extern ucschar hangul_jongseong_to_choseong(ucschar c);
+
+/* Consts about to_kana convertion */
+enum {
+    HANJP_VOWEL_A,
+    HANJP_VOWEL_I,
+    HANJP_VOWEL_U,
+    HANJP_VOWEL_E,
+    HANJP_VOWEL_O
+};
+
+enum {
+    HANJP_CONSONANT_VOID,
+    HANJP_CONSONANT_K,
+    HANJP_CONSONANT_S,
+    HANJP_CONSONANT_T,
+    HANJP_CONSONANT_N,
+    HANJP_CONSONANT_H,
+    HANJP_CONSONANT_M,
+    HANJP_CONSONANT_Y,
+    HANJP_CONSONANT_R,
+    HANJP_CONSONANT_W
+};
+
+//fifty notes
+// For example か(ka) = kana_table[HANJP_CONSONANT_K][HANJP_VOWEL_A]
+static const gunichar kana_table[][5] = {
+    // A, I, U, E, O
+    {0x3042, 0x3044, 0x3046, 0x3048, 0x304A}, // A
+    {0x304B, 0x304D, 0x304F, 0x3051, 0x3053}, // KA
+    {0x3055, 0x3057, 0x3059, 0x305B, 0x305D}, // SA
+    {0x305F, 0x3061, 0x3064, 0x3066, 0x3068}, // TA
+    {0x306A, 0x306B, 0x306C, 0x306D, 0x306E}, // NA
+    {0x306F, 0x3072, 0x3075, 0x3078, 0x307B}, // HA
+    {0x307E, 0x307F, 0x3080, 0x3081, 0x3082}, // MO
+    {0x3084, 0x0000, 0x3086, 0x0000, 0x3088}, // YA
+    {0x3089, 0x308A, 0x308B, 0x308C, 0x308D}, // RA
+    {0x308F, 0x3090, 0x0000, 0x3091, 0x3092}  // WA
+};
+static const gunichar kana_nn = 0x3093;
+
+/* Combine multiple JungSeong int single code */
+typedef union {
+    struct {
+        gunichar jung;
+        gunichar jung2;
+    } box;
+    guint64 value;
+} JungBox;
+
+#define N_COMBINE_TABLE_ELEMENTS 1
 
 G_DEFINE_INTERFACE(HanjpAutomata, hanjp_am, G_TYPE_OBJECT)
 
@@ -49,45 +104,6 @@ gunichar hanjp_am_flush(HanjpAutomata *am) {
     iface->flush(am);
 }
 
-enum {
-    HANJP_VOWEL_A,
-    HANJP_VOWEL_I,
-    HANJP_VOWEL_U,
-    HANJP_VOWEL_E,
-    HANJP_VOWEL_O
-};
-
-enum {
-    HANJP_CONSONANT_VOID,
-    HANJP_CONSONANT_K,
-    HANJP_CONSONANT_S,
-    HANJP_CONSONANT_T,
-    HANJP_CONSONANT_N,
-    HANJP_CONSONANT_H,
-    HANJP_CONSONANT_M,
-    HANJP_CONSONANT_Y,
-    HANJP_CONSONANT_R,
-    HANJP_CONSONANT_W
-};
-
-//fifty notes
-static const gunichar kana_table[][5] = {
-    // A, I, U, E, O
-    {0x3042, 0x3044, 0x3046, 0x3048, 0x304A}, // A
-    {0x304B, 0x304D, 0x304F, 0x3051, 0x3053}, // KA
-    {0x3055, 0x3057, 0x3059, 0x305B, 0x305D}, // SA
-    {0x305F, 0x3061, 0x3064, 0x3066, 0x3068}, // TA
-    {0x306A, 0x306B, 0x306C, 0x306D, 0x306E}, // NA
-    {0x306F, 0x3072, 0x3075, 0x3078, 0x307B}, // HA
-    {0x307E, 0x307F, 0x3080, 0x3081, 0x3082}, // MO
-    {0x3084, 0x0000, 0x3086, 0x0000, 0x3088}, // YA
-    {0x3089, 0x308A, 0x308B, 0x308C, 0x308D}, // RA
-    {0x308F, 0x3090, 0x0000, 0x3091, 0x3092}  // WA
-};
-
-static const gunichar kana_nn = 0x3093;
-
-// For example か(ka) = kana_table[HANJP_CONSONANT_K][HANJP_VOWEL_A]
 
 typedef struct {
     struct HangulBuffer {
@@ -148,16 +164,6 @@ hanjp_ambase_flush(HanjpAutomata *am)
 
     return TRUE;
 }
-
-#define N_COMBINE_TABLE_ELEMENTS 1
-
-typedef union {
-    struct {
-        gunichar jung;
-        gunichar jung2;
-    } box;
-    guint64 value;
-} JungBox;
 
 static void
 hanjp_ambase_init(HanjpAutomataBase *am)
