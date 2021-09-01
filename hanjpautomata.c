@@ -149,7 +149,23 @@ hanjp_ambase_backspace(HanjpAutomata *am)
     HanjpAutomataBasePrivate *priv;
     priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
 
-    // to implement
+	/* Remove hangul characters from backward */
+	if (priv->buffer.jong) {
+		priv->buffer.jong = 0;
+	}
+	else if (priv->buffer.jung2) {
+		priv->buffer.jung2 = 0;
+	}
+	else if (priv->buffer.jung) {
+		priv->buffer.jung = 0;
+	}
+	else if (priv->buffer.cho) {
+		priv->buffer.cho = 0;
+	}
+	else {
+		/* No hangul preedit characters remaining */
+		return FALSE;
+	}
 
     return TRUE;
 }
