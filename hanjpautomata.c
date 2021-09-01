@@ -146,7 +146,6 @@ hanjp_ambase_push(HanjpAutomata *am, GArray *result, GArray *hangul, gunichar ch
 static gboolean
 hanjp_ambase_backspace(HanjpAutomata *am)
 {
-	gboolean result = TRUE;
     HanjpAutomataBasePrivate *priv;
     priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
 
@@ -165,10 +164,10 @@ hanjp_ambase_backspace(HanjpAutomata *am)
 	}
 	else {
 		/* No hangul preedit characters remaining */
-		result = FALSE;
+		return FALSE;
 	}
 
-    return result;
+    return TRUE;
 }
 
 static gunichar
