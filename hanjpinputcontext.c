@@ -133,21 +133,21 @@ gboolean hanjp_ic_backspace(HanjpInputContext *self)
     return TRUE;
 }
 
-const gunichar* hanjp_ic_get_preedit_string(HanjpInputContext *self)
+GArray* hanjp_ic_ref_preedit_string(HanjpInputContext *self)
 {
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
 
     // to implement
 }
 
-const gunichar* hanjp_ic_get_commit_string(HanjpInputContext *self)
+GArray* hanjp_ic_ref_commit_string(HanjpInputContext *self)
 {
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
 
     // to implement
 }
 
-const gunichar* hanjp_ic_get_hangul_string(HanjpInputContext *self)
+GArray* hanjp_ic_ref_hangul_string(HanjpInputContext *self)
 {
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
 
