@@ -5,11 +5,10 @@ You can use GObject Introspection for cross-language interoperability.
 
 ## How can we build?
 ```
-git clone https://github.com/Hanjp-IM/libhanjp.git
+git clone --recurse-submodules https://github.com/Hanjp-IM/libhanjp.git
 cd libhanjp
 mkdir build
 cd build
-git submodule add
 cmake ..
 make
 ```
