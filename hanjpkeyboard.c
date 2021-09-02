@@ -1,5 +1,5 @@
 #include "hanjpkeyboard.h"
-#include <hangul.h>
+#include "hangul.h"
 
 G_DEFINE_INTERFACE(HanjpKeyboard, hanjp_keyboard, G_TYPE_OBJECT)
 
