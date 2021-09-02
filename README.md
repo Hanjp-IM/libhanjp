@@ -9,6 +9,7 @@ git clone https://github.com/Hanjp-IM/libhanjp.git
 cd libhanjp
 mkdir build
 cd build
+git submodule add
 cmake ..
 make
 ```
