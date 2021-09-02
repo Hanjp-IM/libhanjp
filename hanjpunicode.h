@@ -50,7 +50,7 @@ enum {
     HANJP_JUNGSEONG_WEO = 0x116F, // 
 };
 
-enum HangulJongseong {
+enum {
     HANJP_JONGSEONG_KIYEOK = 0x11A8,       // ㄱ
     HANJP_JONGSEONG_SSANGKIYEOK = 0x11A9,  // ㄲ
     HANJP_JONGSEONG_NIEUN = 0x11AB,        // ㄴ
