@@ -127,8 +127,168 @@ hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, gunichar cho, gunichar jun
     HanjpAutomataBasePrivate *priv;
     priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
 
-    //to implement
+    int adj;
+    int i,j;
+    gboolean jung_void;
+    JungBox tempkey;
+    gunichar ch;
+    
+    while(cho || jung || jong){
+        adj=0;
+        jung_void=FALSE;
 
+        switch(cho) {
+            case 0:
+            case HANJP_CHOSEONG_FILLER:        // VOID
+            adj = -1;
+            case HANJP_CHOSEONG_IEUNG:         // ㅇ
+            i = HANJP_CONSONANT__; break;
+            case HANJP_CHOSEONG_KIYEOK:        // ㄱ
+            adj = 1;
+            case HANJP_CHOSEONG_KHIEUKH:       // ㅋ
+            case HANJP_CHOSEONG_SSANGKIYEOK:   // ㄲ
+            i = HANJP_CONSONANT_K; break;   // K
+            case HANJP_CHOSEONG_CIEUC:         // ㅈ
+            adj = 1;
+            case HANJP_CHOSEONG_SIOS:          // ㅅ
+            case HANJP_CHOSEONG_SSANGSIOS:     // ㅆ
+            i = HANJP_CONSONANT_S; break;   // S
+            case HANJP_CHOSEONG_TIKEUT:        // ㄷ
+            adj = 1;
+            case HANJP_CHOSEONG_SSANGTIKEUT:   // ㄸ
+            case HANJP_CHOSEONG_CHIEUCH:       // ㅊ
+            i = HANJP_CONSONANT_T; break;   // T
+            case HANJP_CHOSEONG_NIEUN:         // ㄴ
+            i = HANJP_CONSONANT_N; break;   // N
+            case HANJP_CHOSEONG_PHIEUPH:       // ㅍ
+            adj = 1;
+            case HANJP_CHOSEONG_SSANGPIEUP:    // ㅃ
+            adj += 1;
+            case HANJP_CHOSEONG_HIEUH:         // ㅎ
+            i = HANJP_CONSONANT_H; break;   // H
+            case HANJP_CHOSEONG_MIEUM:         // ㅁ
+            i = HANJP_CONSONANT_M; break;   // M
+            case HANJP_CHOSEONG_RIEUL:         // ㄹ
+            i = HANJP_CONSONANT_R; break;   // R
+            case HANJP_CHOSEONG_SSANGNIEUN:
+            cho = 0;
+            g_array_append_val(dest, kana_nn);
+            continue;
+            default:
+            return FALSE;
+        }
+
+        if(jung == 0) {
+            jung = jung2;
+        }
+        else {
+            JungBox tempkey;
+            tempkey.box.jung=jung;
+            tempkey.box.jung2=jung2;
+            jung = *(gunichar *)g_hash_table_lookup(priv->combine_table, &tempkey.value);
+        }
+        jung2 = 0;
+
+        // divide jungseong
+
+        switch(jung) {
+            case 0:
+            case HANJP_JUNGSEONG_FILLER:
+            jung_void = TRUE; break;
+            case HANJP_JUNGSEONG_WA:
+            if(i == 0){
+                i = HANJP_CONSONANT_W;
+            }
+            else {
+                jung = HANJP_JUNGSEONG_O;
+                jung2 = HANJP_JUNGSEONG_A;
+            }
+            break;
+            case HANJP_JUNGSEONG_YA:
+            case HANJP_JUNGSEONG_YU:
+            case HANJP_JUNGSEONG_YO:
+            case HANJP_JUNGSEONG_YEO:
+            if(i == 0) {
+                i = HANJP_CONSONANT_Y;
+            }
+            else{
+                jung = HANJP_JUNGSEONG_I;
+                jung2 = jung;
+            }
+            break;
+            case HANJP_JUNGSEONG_YE:
+            case HANJP_JUNGSEONG_YAE:
+            jung = HANJP_JUNGSEONG_I;
+            jung2 = HANJP_JUNGSEONG_E;
+            break;
+            default:
+            jung = 0;
+        }
+        //select column index
+        switch(jung) {
+            case HANJP_JUNGSEONG_WA:
+            case HANJP_JUNGSEONG_YA:
+            case HANJP_JUNGSEONG_A:
+            j = HANJP_VOWEL_A; break;
+            case HANJP_JUNGSEONG_I:
+            j = HANJP_VOWEL_I; break;
+            case HANJP_JUNGSEONG_YU:
+            case HANJP_JUNGSEONG_EU:
+            case HANJP_JUNGSEONG_U:
+            case HANJP_JUNGSEONG_FILLER:
+            case 0:
+            j = HANJP_VOWEL_U; break;
+            case HANJP_JUNGSEONG_AE:
+            case HANJP_JUNGSEONG_E:
+            j = HANJP_VOWEL_E; break;
+            case HANJP_JUNGSEONG_YO:
+            case HANJP_JUNGSEONG_YEO:
+            case HANJP_JUNGSEONG_EO:
+            case HANJP_JUNGSEONG_O:
+            j = HANJP_VOWEL_O; break;
+            default:
+            return FALSE;
+        }
+
+        // append taken kana character
+        if(jong == 0 && jung_void && dest->len==0){
+            //if last sound is not nn nor tu
+            if(g_array_index(dest, gunichar, dest->len-1)!=kana_nn && g_array_index(dest, gunichar, dest->len-1)!=kana_table[HANJP_CONSONANT_T][HANJP_VOWEL_U]-1){
+                //jongsung is assigned chosung
+                jong = hangul_choseong_to_jongseong(cho);
+            }
+        }
+        else{
+            ch =kana_table[i][j]+adj;
+            g_array_append_val(dest, ch);
+        }
+
+        // eat choseong
+        cho = 0;
+        // eat jungseong
+        jung = 0;
+        // eat jongseong
+        if(jung == 0) {
+            switch(jong) {
+                case HANJP_JONGSEONG_KIYEOK:
+                case HANJP_JONGSEONG_SSANGKIYEOK:
+                case HANJP_JONGSEONG_SIOS:
+                case HANJP_JONGSEONG_SSANGSIOS:
+                case HANJP_JONGSEONG_KHIEUKH:
+                ch = kana_table[HANJP_CONSONANT_T][HANJP_VOWEL_U]-1;
+                g_array_append_val(dest, ch); break;
+                case HANJP_JONGSEONG_NIEUN:
+                case HANJP_JONGSEONG_MIEUM:
+                case HANJP_JONGSEONG_PIEUP:
+                case HANJP_JONGSEONG_PHIEUPH:
+                case HANJP_JONGSEONG_IEUNG:
+                g_array_append_val(dest, kana_nn); break;
+                default:
+                cho = hangul_jongseong_to_choseong(jong);
+            }
+            jong = 0;
+        }
+    }
     return TRUE;
 }
 
