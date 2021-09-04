@@ -135,23 +135,32 @@ gboolean hanjp_ic_backspace(HanjpInputContext *self)
 
 GArray* hanjp_ic_ref_preedit_string(HanjpInputContext *self)
 {
+    HanjpInputContextPrivate *priv;
+
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
 
-    // to implement
+    priv = hanjp_ic_get_instance_private(self);
+    return g_array_ref(priv->preedit);
 }
 
 GArray* hanjp_ic_ref_commit_string(HanjpInputContext *self)
 {
+    HanjpInputContextPrivate *priv;
+
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
 
-    // to implement
+    priv = hanjp_ic_get_instance_private(self);
+    return g_array_ref(priv->committed);
 }
 
 GArray* hanjp_ic_ref_hangul_string(HanjpInputContext *self)
 {
+    HanjpInputContextPrivate *priv;
+
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
 
-    // to implement
+    priv = hanjp_ic_get_instance_private(self);
+    return g_array_ref(priv->hangul);
 }
 
 void hanjp_ic_set_am(HanjpInputContext *self, gint i)
