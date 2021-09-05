@@ -29,6 +29,11 @@ G_DEFINE_TYPE_WITH_CODE(HanjpKeyboardDefault, hanjp_keyboarddefault, G_TYPE_OBJE
         G_IMPLEMENT_INTERFACE(HANJP_TYPE_KEYBOARD,
             hanjp_keyboarddefault_keyboard_interface_init))
 
+HanjpKeyboardDefault *hanjp_keyboarddefault_new()
+{
+    return g_object_new(HANJP_TYPE_KEYBOARDDEFAULT, NULL);
+}
+
 static gunichar
 hanjp_keyboarddefault_get_mapping(HanjpKeyboard *self, gint tableid, gint ascii)
 {
