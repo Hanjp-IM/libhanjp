@@ -182,7 +182,6 @@ hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, gunichar cho, gunichar jun
             jung = jung2;
         }
         else {
-            JungBox tempkey;
             tempkey.box.jung=jung;
             tempkey.box.jung2=jung2;
             jung = *(gunichar *)g_hash_table_lookup(priv->combine_table, &tempkey.value);
@@ -196,7 +195,7 @@ hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, gunichar cho, gunichar jun
             case HANJP_JUNGSEONG_FILLER:
             jung_void = TRUE; break;
             case HANJP_JUNGSEONG_WA:
-            if(i == 0){
+            if(i == HANJP_CONSONANT__){
                 i = HANJP_CONSONANT_W;
             }
             else {
@@ -208,7 +207,7 @@ hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, gunichar cho, gunichar jun
             case HANJP_JUNGSEONG_YU:
             case HANJP_JUNGSEONG_YO:
             case HANJP_JUNGSEONG_YEO:
-            if(i == 0) {
+            if(i == HANJP_CONSONANT__) {
                 i = HANJP_CONSONANT_Y;
             }
             else{
