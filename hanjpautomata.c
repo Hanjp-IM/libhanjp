@@ -335,9 +335,33 @@ hanjp_ambase_flush(HanjpAutomata *am)
     HanjpAutomataBasePrivate *priv;
     priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
 
-    // to implement
+    JungBox tempkey;
+    ucschar c;
+    
+    tempkey.box.jung=priv->buffer.jung;
+    tempkey.box.jung2=priv->buffer.jung2;
+    priv->buffer.jung=*(gunichar*)g_hash_table_lookup(priv->combine_table, &tempkey.value);
 
-    return TRUE;
+    c=hangul_jamo_to_syllable(priv->buffer.cho, priv->buffer.jung, priv->buffer.jong);
+    if(c==0){
+        if(priv->buffer.cho){
+            c=hangul_jamo_to_cjamo(priv->buffer.cho);
+        }
+        else if(priv->buffer.jung){
+            c=hangul_jamo_to_cjamo(priv->buffer.jung);
+        }
+        else{
+            c=hangul_jamo_to_cjamo(priv->buffer.jong);
+        }
+    }
+    
+    priv->buffer.cho=0;
+    priv->buffer.jung=0;
+    priv->buffer.jung2=0;
+    priv->buffer.jong=0;
+    
+
+    return (gunichar)c;
 }
 
 static void
