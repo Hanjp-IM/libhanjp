@@ -6,6 +6,8 @@
 
 G_BEGIN_DECLS
 
+typedef union HanjpBuffer HanjpBuffer;
+
 enum {
     HANJP_AM_EAT,
     HANJP_AM_POP,
@@ -19,16 +21,16 @@ struct _HanjpAutomataInterface
 {
     GTypeInterface parant_iface;
 
-    gboolean (*to_kana) (HanjpAutomata* self, GArray *dest, gunichar cho, gunichar jung, gunichar jung2, gunichar jong);
+    gboolean (*to_kana) (HanjpAutomata* self, GArray *dest, HanjpBuffer *buffer);
     gint (*push) (HanjpAutomata *self, GArray *result, GArray *hangul, gunichar ch);
     gboolean (*backspace) (HanjpAutomata *self);
-    gunichar (*flush) (HanjpAutomata *self);
+    void (*flush) (HanjpAutomata *self);
 };
 
-gboolean hanjp_am_to_kana(HanjpAutomata *am, GArray *dest, gunichar cho, gunichar jung, gunichar jung2, gunichar jong);
-gint hanjp_am_push(HanjpAutomata *am, GArray *result, GArray *hangul, gunichar ch);
+gboolean hanjp_am_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer);
+gint hanjp_am_push(HanjpAutomata *am, GArray *preedit, GArray *hangul, gunichar ch);
 gboolean hanjp_am_backspace(HanjpAutomata *am);
-gunichar hanjp_am_flush(HanjpAutomata *am);
+void hanjp_am_flush(HanjpAutomata *am);
 
 #define HANJP_TYPE_AUTOMATABASE hanjp_ambase_get_type()
 G_DECLARE_DERIVABLE_TYPE(HanjpAutomataBase, hanjp_ambase, HANJP, AUTOMATABASE, GObject)
@@ -36,6 +38,11 @@ G_DECLARE_DERIVABLE_TYPE(HanjpAutomataBase, hanjp_ambase, HANJP, AUTOMATABASE, G
 struct _HanjpAutomataBaseClass
 {
     GObjectClass parent_class;
+
+    gboolean (*to_kana) (HanjpAutomata* self, GArray *dest, HanjpBuffer *buffer);
+    gint (*push) (HanjpAutomata *self, GArray *result, GArray *hangul, gunichar ch);
+    gboolean (*backspace) (HanjpAutomata *self);
+    void (*flush) (HanjpAutomata *self);
 };
 
 #define HANJP_TYPE_AUTOMATADEFAULT hanjp_amdefault_get_type()
