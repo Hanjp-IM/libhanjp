@@ -5,7 +5,7 @@ G_DEFINE_INTERFACE(HanjpKeyboard, hanjp_keyboard, G_TYPE_OBJECT)
 
 static void
 hanjp_keyboard_default_init(HanjpKeyboardInterface *iface) {
-    /* add properties and signals to the interface here */
+	// Nothing to do
 }
 
 gunichar hanjp_keyboard_get_mapping(HanjpKeyboard* self, gint tableid, gint ascii)
@@ -39,8 +39,9 @@ hanjp_keyboarddefault_get_mapping(HanjpKeyboard *self, gint tableid, gint ascii)
 {
     HanjpKeyboardDefaultPrivate *priv;
     priv = hanjp_keyboarddefault_get_instance_private(HANJP_KEYBOARDDEFAULT(self));
+	g_return_if_fail(priv->keyboard != NULL);
 
-    // to implement
+	return hangul_keyboard_get_mapping(priv->keyboard, tableid, ascii);
 }
 
 static void 
