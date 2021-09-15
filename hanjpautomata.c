@@ -522,7 +522,6 @@ static gint
 hanjp_amdefault_push(HanjpAutomata *am, GArray *preedit, GArray *hangul, gunichar ch)
 {
     gint sig;
-    gunichar ch_h;
     HanjpAutomataBasePrivate *priv;
     HanjpBuffer *buffer;
 
@@ -541,13 +540,16 @@ hanjp_amdefault_push(HanjpAutomata *am, GArray *preedit, GArray *hangul, gunicha
     // post-step
     if(ch != 0 && buffer->jong != 0) {
         hanjp_ambase_peek(am, hangul);
-        g_array_append_val(hangul, ch_h);
         hanjp_ambase_to_kana(am, preedit, buffer);
         hanjp_buffer_push(buffer, ch);
+        sig = HANJP_AM_POP;
+    }
+    else {
+        sig = HANJP_AM_EAT;
     }
     hanjp_buffer_peek(&priv->buffer, preedit);
 
-    return TRUE;
+    return sig;
 }
 
 static void
