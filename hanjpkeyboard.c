@@ -5,7 +5,7 @@ G_DEFINE_INTERFACE(HanjpKeyboard, hanjp_keyboard, G_TYPE_OBJECT)
 
 static void
 hanjp_keyboard_default_init(HanjpKeyboardInterface *iface) {
-	iface->get_mapping = hanjp_keyboard_get_mapping;
+	// Nothing to do
 }
 
 gunichar hanjp_keyboard_get_mapping(HanjpKeyboard* self, gint tableid, gint ascii)
