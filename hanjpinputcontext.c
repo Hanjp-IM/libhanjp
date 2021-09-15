@@ -2,11 +2,22 @@
 #include "hanjpautomata.h"
 #include "hanjpkeyboard.h"
 
+static gboolean is_hiragana(gunichar ch) {
+    return ch >= 0x3040 && ch <= 0x309F;
+}
+
+static gboolean is_katakana(gunichar ch) {
+    return ch >= 0x30A0 && ch <= 0x30FF;
+}
+
+#define KANA_GAP 0x60
+
 typedef struct {
     HanjpAutomata *ams[2];
     HanjpAutomata *cur_am;
     HanjpKeyboard *keyboard;
     GArray *preedit;
+    gint kana_len;
     GArray *committed;
     GArray *hangul;
     gint output_mode;
@@ -88,11 +99,42 @@ const gunichar* hanjp_ic_flush(HanjpInputContext *self)
 
 gint hanjp_ic_process(HanjpInputContext *self, gint ascii)
 {
+    int i;
+    gunichar ch;
+    gint sig;
+    HanjpInputContextPrivate *priv;
+
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    priv = hanjp_ic_get_instance_private(self);
 
-    // to implement
+    //map jaso from ascii
+    ch = hanjp_keyboard_get_mapping(priv->keyboard, 0, ascii);
+    //shrink preedit before push
+    g_array_set_size(priv->preedit, priv->kana_len);
+    //push jaso into automata
+    sig = hanjp_am_push(priv->cur_am, priv->preedit, priv->hangul, ch);
 
-    return 0;
+    // if mode is katakana, change result to katakana
+    if(priv->output_mode == HANJP_OUTPUT_KATAKANA) {
+        for(i = priv->kana_len; i < priv->preedit->len; i++) {
+            if(!is_hiragana(g_array_index(priv->preedit, gunichar, i))){
+                continue;
+            }
+            g_array_index(priv->preedit, gunichar, i) += KANA_GAP;
+        }
+    }
+    priv->kana_len = priv->preedit->len;
+
+    switch(sig) {
+    case HANJP_AM_EAT:
+    case HANJP_AM_POP:
+        break;
+    case HANJP_AM_FAIL:
+    default:
+        hanjp_ic_flush(self);
+    }
+
+    return sig;
 }
 
 void hanjp_ic_toggle_preedit(HanjpInputContext *self)
