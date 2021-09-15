@@ -7,6 +7,91 @@
 extern ucschar hangul_choseong_to_jongseong(ucschar c);
 extern ucschar hangul_jongseong_to_choseong(ucschar c);
 
+/* HanjpBuffer Implementation */
+union HanjpBuffer {
+    struct {
+        gunichar cho;
+        gunichar jung;
+        gunichar jung2;
+        gunichar jong;
+    };
+    gunichar stack[4];
+};
+
+static gunichar
+hanjp_buffer_push(HanjpBuffer *buffer, gunichar ch) {
+    if(hangul_is_choseong(ch)) {
+        if(buffer->cho == 0) {
+            buffer->cho = ch;
+        }
+        else {
+            return ch;
+        }
+    }
+    else if(hangul_is_jungseong(ch)) {
+        if(buffer->jung == 0) {
+            buffer->jung = ch;
+        }
+        else {
+            if(buffer->jung2 == 0) {
+                buffer->jung2 = ch;
+            }
+            else {
+                return ch;
+            }
+        }
+    }
+    else if(hangul_is_jongseong(ch)) {
+        if(buffer->jong == 0) {
+            buffer->jong = ch;
+        }
+        else {
+            return ch;
+        }
+    }
+    else {
+        return ch;
+    }
+
+    return 0;
+}
+
+static void
+hanjp_buffer_peek(HanjpBuffer *buffer, GArray *dest) {
+    int i;
+
+    for(i = 0; i < 4; i++) {
+        if(buffer->stack[i] != 0) {
+            g_array_append_val(dest, buffer->stack[i]);
+        }
+    }
+}
+
+static gunichar
+hanjp_buffer_pop(HanjpBuffer *buffer) {
+    int i;
+    gunichar r;
+
+    for(i = 3; i >= 0; i--) {
+        r = buffer->stack[i];
+        if(r != 0) {
+            buffer->stack[i] = 0;
+            break;
+        }
+    }
+
+    return r;
+}
+
+void hanjp_buffer_flush(HanjpBuffer *buffer) {
+    buffer->cho = 0;
+    buffer->jung = 0;
+    buffer->jung2 = 0;
+    buffer->jong = 0;
+}
+
+/**/
+
 /* Consts about to_kana convertion */
 enum {
     HANJP_VOWEL_A,
@@ -51,12 +136,14 @@ typedef union {
     struct {
         gunichar jung;
         gunichar jung2;
-    } box;
+    };
     guint64 value;
 } JungBox;
 
-#define N_COMBINE_TABLE_ELEMENTS 1
+#define N_COMBINE_TABLE_ELEMENTS 30
 
+
+/* Interface Definition */
 G_DEFINE_INTERFACE(HanjpAutomata, hanjp_am, G_TYPE_OBJECT)
 
 static void
@@ -64,14 +151,14 @@ hanjp_am_default_init(HanjpAutomataInterface *iface) {
     /* add properties and signals to the interface here */
 }
 
-gboolean hanjp_am_to_kana(HanjpAutomata *am, GArray *dest, gunichar cho, gunichar jung, gunichar jung2, gunichar jong) {
+gboolean hanjp_am_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer) {
     HanjpAutomataInterface *iface;
 
     g_return_if_fail(HANJP_IS_AUTOMATA(am));
     
     iface = HANJP_AUTOMATA_GET_IFACE(am);
     g_return_if_fail(iface->to_kana != NULL);
-    iface->to_kana(am, dest, cho, jung, jung2, jong);
+    iface->to_kana(am, dest, buffer);
 }
 
 gint hanjp_am_push(HanjpAutomata *am, GArray *result, GArray *hangul, gunichar ch) {
@@ -94,7 +181,7 @@ gboolean hanjp_am_backspace(HanjpAutomata *am) {
     iface->backspace(am);
 }
 
-gunichar hanjp_am_flush(HanjpAutomata *am) {
+void hanjp_am_flush(HanjpAutomata *am) {
     HanjpAutomataInterface *iface;
 
     g_return_if_fail(HANJP_IS_AUTOMATA(am));
@@ -104,42 +191,66 @@ gunichar hanjp_am_flush(HanjpAutomata *am) {
     iface->flush(am);
 }
 
+/**/
 
 typedef struct {
-    struct HangulBuffer {
-        gunichar cho;
-        gunichar jung;
-        gunichar jung2;
-        gunichar jong;
-    } buffer;
+    HanjpBuffer buffer;
     GHashTable *combine_table;
+    JungBox combine_table_keys[N_COMBINE_TABLE_ELEMENTS];
+    guint32 combine_table_vals[N_COMBINE_TABLE_ELEMENTS];
 } HanjpAutomataBasePrivate;
 
-static void hanjp_ambase_am_interface_init(HanjpAutomataInterface *iface);
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE(HanjpAutomataBase, hanjp_ambase, G_TYPE_OBJECT,
-        G_ADD_PRIVATE(HanjpAutomataBase)
-        G_IMPLEMENT_INTERFACE(HANJP_TYPE_AUTOMATA,
-            hanjp_ambase_am_interface_init))
+G_DEFINE_TYPE_WITH_PRIVATE(HanjpAutomataBase, hanjp_ambase, G_TYPE_OBJECT)
 
 static gboolean
-hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, gunichar cho, gunichar jung, gunichar jung2, gunichar jong)
+hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
 {
+    gint adj;
+    gint i, j;
+    JungBox jungkey;
+    gunichar ch;
+    gunichar *val;
     HanjpAutomataBasePrivate *priv;
+
     priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
 
-    int adj;
-    int i,j;
-    gboolean jung_void;
-    JungBox tempkey;
-    gunichar ch;
-    
-    while(cho || jung || jong){
-        adj=0;
-        jung_void=FALSE;
+    for(i = 0; i < 4; i++) {
+        if(!hangul_is_jamo(buffer->stack[i])) {
+            return FALSE;
+        }
+    }
 
-        switch(cho) {
-            case 0:
-            case HANJP_CHOSEONG_FILLER:        // VOID
+    ch = buffer->cho;
+    if(ch == HANJP_CHOSEONG_FILLER) {
+        buffer->cho = 0;
+    }
+
+    ch = buffer->jung;
+    if(ch == HANJP_JUNGSEONG_FILLER) {
+        buffer->jung = 0;
+    }
+
+    ch = buffer->jung2;
+    if(ch == HANJP_JUNGSEONG_FILLER) {
+        buffer->jung2 = 0;
+    }
+
+    // check batchim is available and move choseong to jongseong
+    if(buffer->cho != 0 && buffer->jung == 0 && dest->len != 0) {
+        ch = g_array_index(dest, gunichar, dest->len - 1);
+        if(ch != kana_nn && ch != kana_table[HANJP_CONSONANT_T][HANJP_VOWEL_U] - 1) {
+            buffer->jong = hangul_choseong_to_jongseong(buffer->cho);
+            buffer->cho = 0;
+        }
+    }
+    
+    //eat choseong, jungseong
+    while(buffer->cho || buffer->jung) {
+        adj = 0;
+        ch = buffer->cho;
+        buffer->cho = 0;
+        switch(ch) {
+            case 0:         // VOID
             adj = -1;
             case HANJP_CHOSEONG_IEUNG:         // ㅇ
             i = HANJP_CONSONANT__; break;
@@ -171,36 +282,40 @@ hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, gunichar cho, gunichar jun
             case HANJP_CHOSEONG_RIEUL:         // ㄹ
             i = HANJP_CONSONANT_R; break;   // R
             case HANJP_CHOSEONG_SSANGNIEUN:
-            cho = 0;
             g_array_append_val(dest, kana_nn);
             continue;
             default:
             return FALSE;
         }
 
-        if(jung == 0) {
-            jung = jung2;
+        // reduce jung
+        ch = buffer->jung2;
+        buffer->jung2 = 0;
+        if(buffer->jung == 0) {
+            buffer->jung = ch;
         }
         else {
-            tempkey.box.jung=jung;
-            tempkey.box.jung2=jung2;
-            jung = *(gunichar *)g_hash_table_lookup(priv->combine_table, &tempkey.value);
+            jungkey.jung = buffer->jung;
+            jungkey.jung2 = ch;
+            val = (gunichar *)g_hash_table_lookup(priv->combine_table, &jungkey.value);
+            if(val != NULL) {
+                buffer->jung = *val;
+            }
+            else {
+                buffer->jung2 = ch;
+            }
         }
-        jung2 = 0;
 
         // divide jungseong
-
-        switch(jung) {
-            case 0:
-            case HANJP_JUNGSEONG_FILLER:
-            jung_void = TRUE; break;
+        ch = buffer->jung;
+        switch(ch) {
             case HANJP_JUNGSEONG_WA:
-            if(i == HANJP_CONSONANT__){
+            if(i == HANJP_CONSONANT__) {
                 i = HANJP_CONSONANT_W;
             }
             else {
-                jung = HANJP_JUNGSEONG_O;
-                jung2 = HANJP_JUNGSEONG_A;
+                buffer->jung = HANJP_JUNGSEONG_O;
+                buffer->jung2 = HANJP_JUNGSEONG_A;
             }
             break;
             case HANJP_JUNGSEONG_YA:
@@ -211,20 +326,21 @@ hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, gunichar cho, gunichar jun
                 i = HANJP_CONSONANT_Y;
             }
             else{
-                jung = HANJP_JUNGSEONG_I;
-                jung2 = jung;
+                buffer->jung = HANJP_JUNGSEONG_I;
+                buffer->jung2 = ch;
             }
             break;
             case HANJP_JUNGSEONG_YE:
             case HANJP_JUNGSEONG_YAE:
-            jung = HANJP_JUNGSEONG_I;
-            jung2 = HANJP_JUNGSEONG_E;
+            buffer->jung = HANJP_JUNGSEONG_I;
+            buffer->jung2 = HANJP_JUNGSEONG_E;
             break;
-            default:
-            jung = 0;
         }
+
         //select column index
-        switch(jung) {
+        ch = buffer->jung;
+        buffer->jung = 0;
+        switch(ch) {
             case HANJP_JUNGSEONG_WA:
             case HANJP_JUNGSEONG_YA:
             case HANJP_JUNGSEONG_A:
@@ -234,7 +350,6 @@ hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, gunichar cho, gunichar jun
             case HANJP_JUNGSEONG_YU:
             case HANJP_JUNGSEONG_EU:
             case HANJP_JUNGSEONG_U:
-            case HANJP_JUNGSEONG_FILLER:
             case 0:
             j = HANJP_VOWEL_U; break;
             case HANJP_JUNGSEONG_AE:
@@ -249,132 +364,98 @@ hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, gunichar cho, gunichar jun
             return FALSE;
         }
 
-        // append taken kana character
-        if(jong == 0 && jung_void && dest->len==0){
-            //if last sound is not nn nor tu
-            if(g_array_index(dest, gunichar, dest->len-1)!=kana_nn && g_array_index(dest, gunichar, dest->len-1)!=kana_table[HANJP_CONSONANT_T][HANJP_VOWEL_U]-1){
-                //jongsung is assigned chosung
-                jong = hangul_choseong_to_jongseong(cho);
-            }
-        }
-        else{
-            ch =kana_table[i][j]+adj;
-            g_array_append_val(dest, ch);
-        }
-
-        // eat choseong
-        cho = 0;
-        // eat jungseong
-        jung = 0;
-        // eat jongseong
-        if(jung == 0) {
-            switch(jong) {
-                case HANJP_JONGSEONG_KIYEOK:
-                case HANJP_JONGSEONG_SSANGKIYEOK:
-                case HANJP_JONGSEONG_SIOS:
-                case HANJP_JONGSEONG_SSANGSIOS:
-                case HANJP_JONGSEONG_KHIEUKH:
-                ch = kana_table[HANJP_CONSONANT_T][HANJP_VOWEL_U]-1;
-                g_array_append_val(dest, ch); break;
-                case HANJP_JONGSEONG_NIEUN:
-                case HANJP_JONGSEONG_MIEUM:
-                case HANJP_JONGSEONG_PIEUP:
-                case HANJP_JONGSEONG_PHIEUPH:
-                case HANJP_JONGSEONG_IEUNG:
-                g_array_append_val(dest, kana_nn); break;
-                default:
-                cho = hangul_jongseong_to_choseong(jong);
-            }
-            jong = 0;
-        }
+        ch = kana_table[i][j] + adj;
+        g_array_append_val(dest, ch);
     }
+
+    // eat jongseong
+    ch = buffer->jong;
+    buffer->jong = 0;
+    switch(ch) {
+        case HANJP_JONGSEONG_KIYEOK:
+        case HANJP_JONGSEONG_SSANGKIYEOK:
+        case HANJP_JONGSEONG_SIOS:
+        case HANJP_JONGSEONG_SSANGSIOS:
+        case HANJP_JONGSEONG_KHIEUKH:
+        ch = kana_table[HANJP_CONSONANT_T][HANJP_VOWEL_U] - 1; break;
+        case HANJP_JONGSEONG_NIEUN:
+        case HANJP_JONGSEONG_MIEUM:
+        case HANJP_JONGSEONG_PIEUP:
+        case HANJP_JONGSEONG_PHIEUPH:
+        case HANJP_JONGSEONG_IEUNG:
+        ch = kana_nn; break;
+        default:
+        buffer->cho = hangul_jongseong_to_choseong(buffer->jong);
+        return hanjp_ambase_to_kana(am, dest, buffer);
+    }
+    g_array_append_val(dest, ch);
+
     return TRUE;
 }
 
-static gint
-hanjp_ambase_push(HanjpAutomata *am, GArray *result, GArray *hangul, gunichar ch)
+static void
+hanjp_ambase_peek(HanjpAutomata *am, GArray *hangul)
 {
+    JungBox jungkey;
+    gunichar c;
+    gunichar *val;
+    gint i;
     HanjpAutomataBasePrivate *priv;
+
     priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
 
-    // to implement
+    if(priv->buffer.jung == 0) {
+        priv->buffer.jung = priv->buffer.jung2;
+        priv->buffer.jung2 = 0;
+    }
+    
+    if(priv->buffer.jung != 0 && priv->buffer.jung2 != 0) {
+        jungkey.jung = priv->buffer.jung;
+        jungkey.jung2 = priv->buffer.jung2;
+        val = (gunichar*)g_hash_table_lookup(priv->combine_table, &jungkey.value);
+        if(val != NULL) {
+            priv->buffer.jung = *val;
+            priv->buffer.jung2 = 0;
+        }
+    }
 
-    return TRUE;
+    c = hangul_jamo_to_syllable(priv->buffer.cho, priv->buffer.jung, priv->buffer.jong);
+    if(c == 0) {
+        for(i = 0; i < 4; i++) {
+            c = priv->buffer.stack[i];
+            if(c != 0) {
+                c = hangul_jamo_to_cjamo(c);
+                g_array_append_val(hangul, c);
+            }
+        }  
+    }
+    else {
+        g_array_append_val(hangul, c);
+    }
 }
 
 static gboolean
 hanjp_ambase_backspace(HanjpAutomata *am)
 {
+    int i;
     HanjpAutomataBasePrivate *priv;
     priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
 
-	/* Remove hangul characters from backward */
-	if (priv->buffer.jong) {
-		priv->buffer.jong = 0;
-	}
-	else if (priv->buffer.jung2) {
-		priv->buffer.jung2 = 0;
-	}
-	else if (priv->buffer.jung) {
-		priv->buffer.jung = 0;
-	}
-	else if (priv->buffer.cho) {
-		priv->buffer.cho = 0;
-	}
-	else {
-		/* No hangul preedit characters remaining */
-		return FALSE;
-	}
-
-    return TRUE;
+    return (hanjp_buffer_pop(&priv->buffer) != 0);
 }
 
-static gunichar
+static void
 hanjp_ambase_flush(HanjpAutomata *am)
 {
     HanjpAutomataBasePrivate *priv;
     priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
-
-    JungBox tempkey;
-    ucschar c;
-    
-    tempkey.box.jung=priv->buffer.jung;
-    tempkey.box.jung2=priv->buffer.jung2;
-    priv->buffer.jung=*(gunichar*)g_hash_table_lookup(priv->combine_table, &tempkey.value);
-
-    c=hangul_jamo_to_syllable(priv->buffer.cho, priv->buffer.jung, priv->buffer.jong);
-    if(c==0){
-        if(priv->buffer.cho){
-            c=hangul_jamo_to_cjamo(priv->buffer.cho);
-        }
-        else if(priv->buffer.jung){
-            c=hangul_jamo_to_cjamo(priv->buffer.jung);
-        }
-        else{
-            c=hangul_jamo_to_cjamo(priv->buffer.jong);
-        }
-    }
-    
-    priv->buffer.cho=0;
-    priv->buffer.jung=0;
-    priv->buffer.jung2=0;
-    priv->buffer.jong=0;
-    
-
-    return (gunichar)c;
+    hanjp_buffer_flush(&priv->buffer);
 }
 
 static void
 hanjp_ambase_init(HanjpAutomataBase *am)
 {
-    int i;
-    static JungBox combine_table_keys[N_COMBINE_TABLE_ELEMENTS];
-    static guint32 combine_table_vals[N_COMBINE_TABLE_ELEMENTS];
     HanjpAutomataBasePrivate *priv;
-
-    combine_table_keys[0].box.jung = HANJP_JUNGSEONG_O;
-    combine_table_keys[0].box.jung2 = HANJP_JUNGSEONG_A;
-    combine_table_vals[0] = HANJP_JUNGSEONG_WA;
     priv = hanjp_ambase_get_instance_private(am);
 
     priv->buffer.cho = 0;
@@ -383,10 +464,6 @@ hanjp_ambase_init(HanjpAutomataBase *am)
     priv->buffer.jong = 0;
 
     priv->combine_table = g_hash_table_new(g_int64_hash, g_int64_equal);
-
-    for(i = 0; i < N_COMBINE_TABLE_ELEMENTS; i++) {
-        g_hash_table_insert(priv->combine_table, &combine_table_keys[i].value, &combine_table_vals[i]);
-    }
 }
 
 static void
@@ -416,55 +493,82 @@ hanjp_ambase_class_init(HanjpAutomataBaseClass *klass)
 
     object_class->dispose = hanjp_ambase_dispose;
     object_class->finalize = hanjp_ambase_finalize;
+
+    klass->to_kana = hanjp_ambase_to_kana;
+    klass->push = NULL;
+    klass->backspace = hanjp_ambase_backspace;
+    klass->flush = hanjp_ambase_flush;
+   
 }
 
-static void
-hanjp_ambase_am_interface_init(HanjpAutomataInterface *iface)
-{
-    iface->to_kana = hanjp_ambase_to_kana;
-    iface->push = hanjp_ambase_push;
-    iface->backspace = hanjp_ambase_backspace;
-    iface->flush = hanjp_ambase_flush;
-}
-
-typedef struct {
-
-} HanjpAutomataDefaultPrivate;
-
-G_DEFINE_TYPE_WITH_PRIVATE(HanjpAutomataDefault, hanjp_amdefault, HANJP_TYPE_AUTOMATABASE)
+static void hanjp_default_am_interface_init(HanjpAutomataInterface *iface);
+G_DEFINE_TYPE_WITH_CODE(HanjpAutomataDefault, hanjp_amdefault, HANJP_TYPE_AUTOMATABASE,
+        G_IMPLEMENT_INTERFACE(HANJP_TYPE_AUTOMATA,
+                hanjp_default_am_interface_init))
 
 static void
 hanjp_amdefault_init(HanjpAutomataDefault *am)
 {
-    // to implement
+    HanjpAutomataBasePrivate *priv;
+    priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
+    priv->combine_table_keys[0].jung = HANJP_JUNGSEONG_O;
+    priv->combine_table_keys[0].jung2 = HANJP_JUNGSEONG_A;
+    priv->combine_table_vals[0] = HANJP_JUNGSEONG_WA;
+
+    g_hash_table_insert(priv->combine_table, &priv->combine_table_keys[0].value, &priv->combine_table_vals[0]);
 }
 
 static gint
-hanjp_amdefault_push(HanjpAutomataDefault *am, GArray *result, GArray *hangul, gunichar ch)
+hanjp_amdefault_push(HanjpAutomata *am, GArray *preedit, GArray *hangul, gunichar ch)
 {
-    // to implement
-}
+    gint sig;
+    gunichar ch_h;
+    HanjpAutomataBasePrivate *priv;
+    HanjpBuffer *buffer;
+    HanjpBuffer buffer_copy;
 
-static gboolean
-hanjp_amdefault_backspace(HanjpAutomataDefault *am)
-{
-    // to implement
+    priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
+    buffer = &priv->buffer;
+
+    if(!hangul_is_jamo(ch)) {
+        g_array_append_val(preedit, ch);
+        g_array_append_val(hangul, ch);
+        return HANJP_AM_FAIL;
+    }
+
+    // push jaso to buffer
+    ch = hanjp_buffer_push(buffer, ch);
+
+    // post-step
+    if(ch != 0 && buffer->jong != 0) {
+        hanjp_ambase_peek(am, hangul);
+        g_array_append_val(hangul, ch_h);
+        hanjp_ambase_to_kana(am, preedit, buffer);
+        hanjp_buffer_push(buffer, ch);
+    }
+    hanjp_buffer_peek(&priv->buffer, preedit);
+
     return TRUE;
-}
-
-static gunichar
-hanjp_amdefault_flush(HanjpAutomataDefault *am)
-{
-    // to implement
 }
 
 static void
 hanjp_amdefault_class_init(HanjpAutomataDefaultClass *klass)
 {
-    // to implement
+    HanjpAutomataBaseClass *base_class = HANJP_AUTOMATABASE_CLASS(klass);
+
+    base_class->push = hanjp_amdefault_push;
 }
 
 HanjpAutomataDefault *hanjp_amdefault_new()
 {
     return g_object_new(HANJP_TYPE_AUTOMATADEFAULT, NULL);
+}
+
+static void
+hanjp_default_am_interface_init(HanjpAutomataInterface *iface)
+{
+    iface->to_kana = hanjp_ambase_to_kana;
+    iface->push = hanjp_amdefault_push;
+    iface->backspace = hanjp_ambase_backspace;
+    iface->flush = hanjp_ambase_flush;
 }
