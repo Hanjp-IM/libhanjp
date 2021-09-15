@@ -525,7 +525,6 @@ hanjp_amdefault_push(HanjpAutomata *am, GArray *preedit, GArray *hangul, gunicha
     gunichar ch_h;
     HanjpAutomataBasePrivate *priv;
     HanjpBuffer *buffer;
-    HanjpBuffer buffer_copy;
 
     priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
     buffer = &priv->buffer;
