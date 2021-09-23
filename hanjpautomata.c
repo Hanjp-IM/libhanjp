@@ -56,7 +56,7 @@ hanjp_buffer_push(HanjpBuffer *buffer, gunichar ch) {
     return 0;
 }
 
-static void
+static gint
 hanjp_buffer_peek(HanjpBuffer *buffer, GArray *dest) {
     int i;
 
@@ -269,6 +269,7 @@ hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
             adj = 1;
             case HANJP_CHOSEONG_SSANGTIKEUT:   // ㄸ
             case HANJP_CHOSEONG_CHIEUCH:       // ㅊ
+            case HANJP_CHOSEONG_THIEUTH:       // ㅌ
             i = HANJP_CONSONANT_T; break;   // T
             case HANJP_CHOSEONG_NIEUN:         // ㄴ
             i = HANJP_CONSONANT_N; break;   // N
@@ -524,22 +525,31 @@ hanjp_amdefault_push(HanjpAutomata *am, GArray *preedit, GArray *hangul, gunicha
     priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
     buffer = &priv->buffer;
 
-    if(!hangul_is_jamo(ch)) {
-        g_array_append_val(preedit, ch);
-        g_array_append_val(hangul, ch);
-        return -1;
+    if(ch == 0) {
+        return 0;
     }
 
     // push jaso to buffer
     ch = hanjp_buffer_push(buffer, ch);
 
     // post-step
+
+    // convert poped string to kana
     if(ch != 0 && buffer->jong == 0) {
         hanjp_ambase_peek(am, hangul);
         r = hanjp_ambase_to_kana(am, preedit, buffer);
+            
+        if(r == -1 || !hangul_is_jamo(ch)) {
+            hanjp_ambase_peek(am, hangul);
+            r = hanjp_ambase_to_kana(am, preedit, buffer);
+            g_array_append_val(hangul, ch);
+            g_array_append_val(preedit, ch);
+            r++;
+            return -r;
+        }
         hanjp_buffer_push(buffer, ch);
     }
-    hanjp_ambase_peek(HANJP_AUTOMATA(am), preedit);
+    hanjp_ambase_peek(am, preedit);
 
     return r;
 }
