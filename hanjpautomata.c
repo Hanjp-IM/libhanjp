@@ -539,7 +539,7 @@ hanjp_amdefault_push(HanjpAutomata *am, GArray *preedit, GArray *hangul, gunicha
         r = hanjp_ambase_to_kana(am, preedit, buffer);
         hanjp_buffer_push(buffer, ch);
     }
-    hanjp_ambase_peek(HANJP_AUTOMATABASE(am), preedit);
+    hanjp_ambase_peek(HANJP_AUTOMATA(am), preedit);
 
     return r;
 }
