@@ -90,12 +90,18 @@ void hanjp_ic_reset(HanjpInputContext *self)
 
 void hanjp_ic_flush(HanjpInputContext *self)
 {
+    gint i;
     HanjpInputContextPrivate *priv;
 
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
     priv = hanjp_ic_get_instance_private(self);
 
-    return NULL;
+    hanjp_am_flush(priv->cur_am);
+    for(i = 0; i < priv->preedit->len; i++) {
+        g_array_append_val(priv->committed, g_array_index(priv->preedit, gunichar, i));
+    }
+    g_array_set_size(priv->preedit, 0);
+    priv->kana_len = 0;
 }
 
 gint hanjp_ic_process(HanjpInputContext *self, gint ascii)
