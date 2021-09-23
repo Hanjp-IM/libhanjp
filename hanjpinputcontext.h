@@ -20,7 +20,7 @@ struct _HanjpInputContextClass
     GObjectClass parent_class;
 
     void (*reset) (HanjpInputContext *self);
-    const gunichar* (*flush) (HanjpInputContext *self);
+    void (*flush) (HanjpInputContext *self);
     gint (*process) (HanjpInputContext *self, gint ascii);
     void (*toggle_preedit) (HanjpInputContext *self);
     void (*to_haragana_preedit) (HanjpInputContext *self);
@@ -37,7 +37,7 @@ struct _HanjpInputContextClass
 
 HanjpInputContext *hanjp_ic_new();
 void hanjp_ic_reset(HanjpInputContext *self);
-const gunichar* hanjp_ic_flush(HanjpInputContext *self);
+void hanjp_ic_flush(HanjpInputContext *self);
 gint hanjp_ic_process(HanjpInputContext *self, gint ascii);
 void hanjp_ic_toggle_preedit(HanjpInputContext *self);
 void hanjp_ic_to_haragana_preedit(HanjpInputContext *self);

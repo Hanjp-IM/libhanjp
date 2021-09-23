@@ -88,11 +88,12 @@ void hanjp_ic_reset(HanjpInputContext *self)
     // to implement
 }
 
-const gunichar* hanjp_ic_flush(HanjpInputContext *self)
+void hanjp_ic_flush(HanjpInputContext *self)
 {
-    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    HanjpInputContextPrivate *priv;
 
-    // to implement
+    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    priv = hanjp_ic_get_instance_private(self);
 
     return NULL;
 }
@@ -109,12 +110,16 @@ gint hanjp_ic_process(HanjpInputContext *self, gint ascii)
 
     //map jaso from ascii
     ch = hanjp_keyboard_get_mapping(priv->keyboard, 0, ascii);
+    if(ch == 0) {
+        ch = (gunichar)ascii;
+    }
     //shrink preedit before push
     g_array_set_size(priv->preedit, priv->kana_len);
     //push jaso into automata
     res = hanjp_am_push(priv->cur_am, priv->preedit, priv->hangul, ch);
 
-    if(res == -1) {
+    if(res < 0) {
+        priv->kana_len += -res;
         hanjp_ic_flush(self);
     }
     else if(res > 0) {
