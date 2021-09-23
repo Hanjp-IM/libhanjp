@@ -101,7 +101,7 @@ gint hanjp_ic_process(HanjpInputContext *self, gint ascii)
 {
     int i;
     gunichar ch;
-    gint sig;
+    gint res;
     HanjpInputContextPrivate *priv;
 
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
@@ -112,29 +112,25 @@ gint hanjp_ic_process(HanjpInputContext *self, gint ascii)
     //shrink preedit before push
     g_array_set_size(priv->preedit, priv->kana_len);
     //push jaso into automata
-    sig = hanjp_am_push(priv->cur_am, priv->preedit, priv->hangul, ch);
+    res = hanjp_am_push(priv->cur_am, priv->preedit, priv->hangul, ch);
 
-    // if mode is katakana, change result to katakana
-    if(priv->output_mode == HANJP_OUTPUT_KATAKANA) {
-        for(i = priv->kana_len; i < priv->preedit->len; i++) {
-            if(!is_hiragana(g_array_index(priv->preedit, gunichar, i))){
-                continue;
-            }
-            g_array_index(priv->preedit, gunichar, i) += KANA_GAP;
-        }
-    }
-    priv->kana_len = priv->preedit->len;
-
-    switch(sig) {
-    case HANJP_AM_EAT:
-    case HANJP_AM_POP:
-        break;
-    case HANJP_AM_FAIL:
-    default:
+    if(res == -1) {
         hanjp_ic_flush(self);
     }
+    else if(res > 0) {
+        // if mode is katakana, change result to katakana
+        if(priv->output_mode == HANJP_OUTPUT_KATAKANA) {
+            for(i = priv->kana_len; i < priv->preedit->len; i++) {
+                if(!is_hiragana(g_array_index(priv->preedit, gunichar, i))){
+                    continue;
+                }
+                g_array_index(priv->preedit, gunichar, i) += KANA_GAP;
+            }
+        }
+        priv->kana_len += res;
+    }
 
-    return sig;
+    return res;
 }
 
 void hanjp_ic_toggle_preedit(HanjpInputContext *self)
