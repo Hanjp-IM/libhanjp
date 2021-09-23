@@ -433,6 +433,7 @@ hanjp_ambase_peek(HanjpAutomata *am, GArray *hangul)
             if(c != 0) {
                 c = hangul_jamo_to_cjamo(c);
                 g_array_append_val(hangul, c);
+                break;
             }
         }  
     }
@@ -533,21 +534,19 @@ hanjp_amdefault_push(HanjpAutomata *am, GArray *preedit, GArray *hangul, gunicha
     ch = hanjp_buffer_push(buffer, ch);
 
     // post-step
-
     // convert poped string to kana
     if(ch != 0 && buffer->jong == 0) {
         hanjp_ambase_peek(am, hangul);
         r = hanjp_ambase_to_kana(am, preedit, buffer);
-            
-        if(r == -1 || !hangul_is_jamo(ch)) {
-            hanjp_ambase_peek(am, hangul);
-            r = hanjp_ambase_to_kana(am, preedit, buffer);
+        if(!hangul_is_jamo(ch)) {
             g_array_append_val(hangul, ch);
             g_array_append_val(preedit, ch);
             r++;
-            return -r;
+            r = -r;
         }
-        hanjp_buffer_push(buffer, ch);
+        else {
+            hanjp_buffer_push(buffer, ch);
+        }
     }
     hanjp_ambase_peek(am, preedit);
 
