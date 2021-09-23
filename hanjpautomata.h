@@ -8,12 +8,6 @@ G_BEGIN_DECLS
 
 typedef union HanjpBuffer HanjpBuffer;
 
-enum {
-    HANJP_AM_EAT,
-    HANJP_AM_POP,
-    HANJP_AM_FAIL
-};
-
 #define HANJP_TYPE_AUTOMATA hanjp_am_get_type()
 G_DECLARE_INTERFACE(HanjpAutomata, hanjp_am, HANJP, AUTOMATA, GObject)
 
@@ -27,7 +21,7 @@ struct _HanjpAutomataInterface
     void (*flush) (HanjpAutomata *self);
 };
 
-gboolean hanjp_am_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer);
+gint hanjp_am_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer);
 gint hanjp_am_push(HanjpAutomata *am, GArray *preedit, GArray *hangul, gunichar ch);
 gboolean hanjp_am_backspace(HanjpAutomata *am);
 void hanjp_am_flush(HanjpAutomata *am);

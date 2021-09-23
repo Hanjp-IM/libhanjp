@@ -151,14 +151,14 @@ hanjp_am_default_init(HanjpAutomataInterface *iface) {
     /* add properties and signals to the interface here */
 }
 
-gboolean hanjp_am_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer) {
+gint hanjp_am_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer) {
     HanjpAutomataInterface *iface;
 
     g_return_if_fail(HANJP_IS_AUTOMATA(am));
     
     iface = HANJP_AUTOMATA_GET_IFACE(am);
     g_return_if_fail(iface->to_kana != NULL);
-    iface->to_kana(am, dest, buffer);
+    return iface->to_kana(am, dest, buffer);
 }
 
 gint hanjp_am_push(HanjpAutomata *am, GArray *result, GArray *hangul, gunichar ch) {
@@ -168,7 +168,7 @@ gint hanjp_am_push(HanjpAutomata *am, GArray *result, GArray *hangul, gunichar c
     
     iface = HANJP_AUTOMATA_GET_IFACE(am);
     g_return_if_fail(iface->push != NULL);
-    iface->push(am, result, hangul, ch);
+    return iface->push(am, result, hangul, ch);
 }
 
 gboolean hanjp_am_backspace(HanjpAutomata *am) {
@@ -178,7 +178,7 @@ gboolean hanjp_am_backspace(HanjpAutomata *am) {
 
     iface = HANJP_AUTOMATA_GET_IFACE(am);
     g_return_if_fail(iface->backspace != NULL);
-    iface->backspace(am);
+    return iface->backspace(am);
 }
 
 void hanjp_am_flush(HanjpAutomata *am) {
@@ -202,9 +202,10 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE(HanjpAutomataBase, hanjp_ambase, G_TYPE_OBJECT)
 
-static gboolean
+static gint
 hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
 {
+    gint r = 0;
     gint adj;
     gint i, j;
     JungBox jungkey;
@@ -215,8 +216,8 @@ hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
     priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
 
     for(i = 0; i < 4; i++) {
-        if(!hangul_is_jamo(buffer->stack[i])) {
-            return FALSE;
+        if(buffer->stack[i] != 0 && !hangul_is_jamo(buffer->stack[i])) {
+            return -1;
         }
     }
 
@@ -283,9 +284,10 @@ hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
             i = HANJP_CONSONANT_R; break;   // R
             case HANJP_CHOSEONG_SSANGNIEUN:
             g_array_append_val(dest, kana_nn);
+            r++;
             continue;
             default:
-            return FALSE;
+            return -1;
         }
 
         // reduce jung
@@ -366,31 +368,35 @@ hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
 
         ch = kana_table[i][j] + adj;
         g_array_append_val(dest, ch);
+        r++;
     }
 
     // eat jongseong
     ch = buffer->jong;
     buffer->jong = 0;
-    switch(ch) {
-        case HANJP_JONGSEONG_KIYEOK:
-        case HANJP_JONGSEONG_SSANGKIYEOK:
-        case HANJP_JONGSEONG_SIOS:
-        case HANJP_JONGSEONG_SSANGSIOS:
-        case HANJP_JONGSEONG_KHIEUKH:
-        ch = kana_table[HANJP_CONSONANT_T][HANJP_VOWEL_U] - 1; break;
-        case HANJP_JONGSEONG_NIEUN:
-        case HANJP_JONGSEONG_MIEUM:
-        case HANJP_JONGSEONG_PIEUP:
-        case HANJP_JONGSEONG_PHIEUPH:
-        case HANJP_JONGSEONG_IEUNG:
-        ch = kana_nn; break;
-        default:
-        buffer->cho = hangul_jongseong_to_choseong(buffer->jong);
-        return hanjp_ambase_to_kana(am, dest, buffer);
+    if(ch != 0) {
+        switch(ch) {
+            case HANJP_JONGSEONG_KIYEOK:
+            case HANJP_JONGSEONG_SSANGKIYEOK:
+            case HANJP_JONGSEONG_SIOS:
+            case HANJP_JONGSEONG_SSANGSIOS:
+            case HANJP_JONGSEONG_KHIEUKH:
+            ch = kana_table[HANJP_CONSONANT_T][HANJP_VOWEL_U] - 1; break;
+            case HANJP_JONGSEONG_NIEUN:
+            case HANJP_JONGSEONG_MIEUM:
+            case HANJP_JONGSEONG_PIEUP:
+            case HANJP_JONGSEONG_PHIEUPH:
+            case HANJP_JONGSEONG_IEUNG:
+            ch = kana_nn; break;
+            default:
+            buffer->cho = hangul_jongseong_to_choseong(buffer->jong);
+            return r + hanjp_ambase_to_kana(am, dest, buffer);
+        }
+        g_array_append_val(dest, ch);
+        r++;
     }
-    g_array_append_val(dest, ch);
 
-    return TRUE;
+    return r;
 }
 
 static void
@@ -467,21 +473,12 @@ hanjp_ambase_init(HanjpAutomataBase *am)
 }
 
 static void
-hanjp_ambase_dispose(GObject *gobject)
-{
-    HanjpAutomataBasePrivate *priv;
-    priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(gobject));
-
-    g_clear_object(&priv->combine_table);
-
-    G_OBJECT_CLASS(hanjp_ambase_parent_class)->dispose(gobject);
-}
-
-static void
 hanjp_ambase_finalize(GObject *gobject)
 {
     HanjpAutomataBasePrivate *priv;
     priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(gobject));
+
+    g_hash_table_destroy(priv->combine_table);
 
     G_OBJECT_CLASS(hanjp_ambase_parent_class)->finalize(gobject);
 }
@@ -490,8 +487,7 @@ static void
 hanjp_ambase_class_init(HanjpAutomataBaseClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
-
-    object_class->dispose = hanjp_ambase_dispose;
+    
     object_class->finalize = hanjp_ambase_finalize;
 
     klass->to_kana = hanjp_ambase_to_kana;
@@ -521,7 +517,7 @@ hanjp_amdefault_init(HanjpAutomataDefault *am)
 static gint
 hanjp_amdefault_push(HanjpAutomata *am, GArray *preedit, GArray *hangul, gunichar ch)
 {
-    gint sig;
+    gint r = 0;
     HanjpAutomataBasePrivate *priv;
     HanjpBuffer *buffer;
 
@@ -531,25 +527,21 @@ hanjp_amdefault_push(HanjpAutomata *am, GArray *preedit, GArray *hangul, gunicha
     if(!hangul_is_jamo(ch)) {
         g_array_append_val(preedit, ch);
         g_array_append_val(hangul, ch);
-        return HANJP_AM_FAIL;
+        return -1;
     }
 
     // push jaso to buffer
     ch = hanjp_buffer_push(buffer, ch);
 
     // post-step
-    if(ch != 0 && buffer->jong != 0) {
+    if(ch != 0 && buffer->jong == 0) {
         hanjp_ambase_peek(am, hangul);
-        hanjp_ambase_to_kana(am, preedit, buffer);
+        r = hanjp_ambase_to_kana(am, preedit, buffer);
         hanjp_buffer_push(buffer, ch);
-        sig = HANJP_AM_POP;
     }
-    else {
-        sig = HANJP_AM_EAT;
-    }
-    hanjp_buffer_peek(&priv->buffer, preedit);
+    hanjp_ambase_peek(HANJP_AUTOMATABASE(am), preedit);
 
-    return sig;
+    return r;
 }
 
 static void
