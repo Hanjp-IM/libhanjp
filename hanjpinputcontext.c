@@ -35,9 +35,12 @@ hanjp_ic_dispose(GObject *self)
     g_clear_object(&priv->ams[1]);
     g_clear_object(&priv->cur_am);
     g_clear_object(&priv->keyboard);
-    g_clear_object(&priv->preedit);
-    g_clear_object(&priv->committed);
-    g_clear_object(&priv->hangul);
+    g_array_unref(priv->preedit);
+	priv->preedit = NULL;
+    g_array_unref(priv->committed);
+	priv->committed = NULL;
+    g_array_unref(priv->hangul);
+	priv->hangul = NULL;
 
     //chain up
     G_OBJECT_CLASS(hanjp_ic_parent_class)->dispose(self);
