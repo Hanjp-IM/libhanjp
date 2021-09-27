@@ -86,9 +86,17 @@ HanjpInputContext* hanjp_ic_new()
 
 void hanjp_ic_reset(HanjpInputContext *self)
 {
-    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    HanjpInputContextPrivate *priv;
 
-    // to implement
+    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    priv = hanjp_ic_get_instance_private(self);
+
+    hanjp_am_flush(priv->cur_am);
+    g_array_set_size(priv->preedit, 0);
+    g_array_set_size(priv->committed, 0);
+    g_array_set_size(priv->hangul, 0);
+    priv->kana_len = 0;
+    priv->output_mode = HANJP_OUTPUT_HIRAGANA;
 }
 
 void hanjp_ic_flush(HanjpInputContext *self)
