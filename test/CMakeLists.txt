@@ -8,5 +8,7 @@ FetchContent_Declare(
     URL https://github.com/google/googletest/archive/refs/tags/release-1.11.0.zip
 )
 
+set(INSTALL_GTEST OFF)
+
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
