@@ -6,7 +6,15 @@
 
 G_BEGIN_DECLS
 
-typedef union HanjpBuffer HanjpBuffer;
+typedef union {
+    struct {
+        gunichar cho;
+        gunichar jung;
+        gunichar jung2;
+        gunichar jong;
+    };
+    gunichar stack[4];
+} HanjpBuffer;
 
 #define HANJP_TYPE_AUTOMATA hanjp_am_get_type()
 G_DECLARE_INTERFACE(HanjpAutomata, hanjp_am, HANJP, AUTOMATA, GObject)

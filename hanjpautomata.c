@@ -8,16 +8,6 @@ extern ucschar hangul_choseong_to_jongseong(ucschar c);
 extern ucschar hangul_jongseong_to_choseong(ucschar c);
 
 /* HanjpBuffer Implementation */
-union HanjpBuffer {
-    struct {
-        gunichar cho;
-        gunichar jung;
-        gunichar jung2;
-        gunichar jong;
-    };
-    gunichar stack[4];
-};
-
 static gunichar
 hanjp_buffer_push(HanjpBuffer *buffer, gunichar ch) {
     if(hangul_is_choseong(ch)) {
@@ -83,7 +73,8 @@ hanjp_buffer_pop(HanjpBuffer *buffer) {
     return r;
 }
 
-void hanjp_buffer_flush(HanjpBuffer *buffer) {
+static void
+hanjp_buffer_flush(HanjpBuffer *buffer) {
     buffer->cho = 0;
     buffer->jung = 0;
     buffer->jung2 = 0;
@@ -114,7 +105,7 @@ enum {
     HANJP_CONSONANT_W
 };
 
-//fifty notes
+// Fifty notes
 // For example か(ka) = kana_table[HANJP_CONSONANT_K][HANJP_VOWEL_A]
 static const gunichar kana_table[][5] = {
     // A, I, U, E, O
