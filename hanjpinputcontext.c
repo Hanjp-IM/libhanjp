@@ -2,12 +2,12 @@
 #include "hanjpautomata.h"
 #include "hanjpkeyboard.h"
 
-static gboolean is_hiragana(gunichar ch) {
-    return ch >= 0x3040 && ch <= 0x309F;
+static gboolean is_hiragana(gunichar ch) { 
+    return (ch >= 0x3041 && ch <= 0x3096) || (ch >= 0x309D && ch <= 0x309E);
 }
 
 static gboolean is_katakana(gunichar ch) {
-    return ch >= 0x30A0 && ch <= 0x30FF;
+    return (ch >= 0x30A1 && ch <= 0x30F6) || (ch >= 0x30FD && ch <= 0x30FE);
 }
 
 #define KANA_GAP 0x60
@@ -157,24 +157,48 @@ gint hanjp_ic_process(HanjpInputContext *self, gint ascii)
 
 void hanjp_ic_toggle_preedit(HanjpInputContext *self)
 {
-    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    int i;
+    HanjpInputContextPrivate *priv;
 
-    // to implement
+    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    priv = hanjp_ic_get_instance_private(self);
+
+    for (i = 0; i < priv->preedit->len; i++) {
+        if (is_katakana(g_array_index(priv->preedit, gunichar, i))) {
+            g_array_index(priv->preedit, gunichar, i) += -KANA_GAP;
+        } else if (is_hiragana(g_array_index(priv->preedit, gunichar, i))) {
+            g_array_index(priv->preedit, gunichar, i) += KANA_GAP;
+        }
+    }
 }
 
 void hanjp_ic_to_haragana_preedit(HanjpInputContext *self)
 {
+    int i;
+    HanjpInputContextPrivate *priv;
+
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    priv = hanjp_ic_get_instance_private(self);
 
-    // to implement
-
+    for (i = 0; i < priv->preedit->len; i++) {
+        if (is_katakana(g_array_index(priv->preedit, gunichar, i))) {
+            g_array_index(priv->preedit, gunichar, i) += -KANA_GAP;
+        }
+    }
 }
 
-void hanjp_ic_to_katakana_preedit(HanjpInputContext *self)
-{
-    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+void hanjp_ic_to_katakana_preedit(HanjpInputContext *self) {
+    int i;
+    HanjpInputContextPrivate *priv;
 
-    // to implement
+    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    priv = hanjp_ic_get_instance_private(self);
+
+    for (i = 0; i < priv->preedit->len; i++) {
+        if (is_hiragana(g_array_index(priv->preedit, gunichar, i))) {
+            g_array_index(priv->preedit, gunichar, i) += KANA_GAP;
+        }
+    }
 }
 
 void hanjp_ic_replace(HanjpInputContext *self, int start, int end, const gunichar* str_insert)
