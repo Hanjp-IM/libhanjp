@@ -261,21 +261,29 @@ GArray* hanjp_ic_ref_hangul_string(HanjpInputContext *self)
 
 void hanjp_ic_set_am(HanjpInputContext *self, gint i)
 {
-    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    HanjpInputContextPrivate *priv;
 
-    // to implement
+    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    priv = hanjp_ic_get_instance_private(self);
+
+    g_object_unref(priv->cur_am);
+    priv->cur_am = g_object_ref(priv->ams[i]);
 }
 
 void hanjp_ic_set_output_mode(HanjpInputContext *self, gint i)
 {
+    HanjpInputContextPrivate *priv;
+
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
 
-    // to implement
+    priv->output_mode = i;
 }
 
 gint hanjp_ic_get_output_mode(HanjpInputContext *self)
 {
+    HanjpInputContextPrivate *priv;
+
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
 
-    // to implement
+    return priv->output_mode;
 }
