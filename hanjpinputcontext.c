@@ -203,10 +203,22 @@ void hanjp_ic_to_katakana_preedit(HanjpInputContext *self) {
 
 void hanjp_ic_replace(HanjpInputContext *self, int start, int end, const gunichar* str_insert)
 {
+    int i;
+    HanjpInputContextPrivate *priv;
+
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
     g_return_if_fail(str_insert != NULL);
+    g_return_if_fail(start <= end);
+    priv = hanjp_ic_get_instance_private(self);
 
-    // to implement
+    g_array_remove_range(priv->preedit, start, end - start);
+
+    while (*str_insert)
+    {
+        g_array_insert_val(priv->preedit, start, *str_insert);
+        start++;
+        str_insert++;
+    }
 }
 
 gboolean hanjp_ic_backspace(HanjpInputContext *self)
