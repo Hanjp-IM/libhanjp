@@ -225,8 +225,22 @@ gboolean hanjp_ic_backspace(HanjpInputContext *self)
 {
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
 
-    // to implement
+    HanjpInputContextPrivate *priv;
+    priv = hanjp_ic_get_instance_private(self);
+
+    if(!hanjp_am_backspace(priv->cur_am)){
+        
+        if((priv->preedit->len)==0)
+        {
+            return FALSE;
+        }
+        
+        g_array_remove_index(priv->preedit,(priv->preedit->len)-1)
+        
+    }
+
     return TRUE;
+
 }
 
 GArray* hanjp_ic_ref_preedit_string(HanjpInputContext *self)
