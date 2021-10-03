@@ -235,7 +235,7 @@ gboolean hanjp_ic_backspace(HanjpInputContext *self)
             return FALSE;
         }
         
-        g_array_remove_index(priv->preedit,(priv->preedit->len)-1)
+        g_array_remove_index(priv->preedit,(priv->preedit->len)-1);
         
     }
 
