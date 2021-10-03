@@ -2,12 +2,12 @@
 #include "hanjpautomata.h"
 #include "hanjpkeyboard.h"
 
-static gboolean is_hiragana(gunichar ch) {
-    return ch >= 0x3040 && ch <= 0x309F;
+static gboolean is_hiragana(gunichar ch) { 
+    return (ch >= 0x3041 && ch <= 0x3096) || (ch >= 0x309D && ch <= 0x309E);
 }
 
 static gboolean is_katakana(gunichar ch) {
-    return ch >= 0x30A0 && ch <= 0x30FF;
+    return (ch >= 0x30A1 && ch <= 0x30F6) || (ch >= 0x30FD && ch <= 0x30FE);
 }
 
 #define KANA_GAP 0x60
@@ -86,9 +86,17 @@ HanjpInputContext* hanjp_ic_new()
 
 void hanjp_ic_reset(HanjpInputContext *self)
 {
-    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    HanjpInputContextPrivate *priv;
 
-    // to implement
+    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    priv = hanjp_ic_get_instance_private(self);
+
+    hanjp_am_flush(priv->cur_am);
+    g_array_set_size(priv->preedit, 0);
+    g_array_set_size(priv->committed, 0);
+    g_array_set_size(priv->hangul, 0);
+    priv->kana_len = 0;
+    priv->output_mode = HANJP_OUTPUT_HIRAGANA;
 }
 
 void hanjp_ic_flush(HanjpInputContext *self)
@@ -149,32 +157,68 @@ gint hanjp_ic_process(HanjpInputContext *self, gint ascii)
 
 void hanjp_ic_toggle_preedit(HanjpInputContext *self)
 {
-    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    int i;
+    HanjpInputContextPrivate *priv;
 
-    // to implement
+    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    priv = hanjp_ic_get_instance_private(self);
+
+    for (i = 0; i < priv->preedit->len; i++) {
+        if (is_katakana(g_array_index(priv->preedit, gunichar, i))) {
+            g_array_index(priv->preedit, gunichar, i) += -KANA_GAP;
+        } else if (is_hiragana(g_array_index(priv->preedit, gunichar, i))) {
+            g_array_index(priv->preedit, gunichar, i) += KANA_GAP;
+        }
+    }
 }
 
 void hanjp_ic_to_haragana_preedit(HanjpInputContext *self)
 {
+    int i;
+    HanjpInputContextPrivate *priv;
+
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    priv = hanjp_ic_get_instance_private(self);
 
-    // to implement
-
+    for (i = 0; i < priv->preedit->len; i++) {
+        if (is_katakana(g_array_index(priv->preedit, gunichar, i))) {
+            g_array_index(priv->preedit, gunichar, i) += -KANA_GAP;
+        }
+    }
 }
 
-void hanjp_ic_to_katakana_preedit(HanjpInputContext *self)
-{
-    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+void hanjp_ic_to_katakana_preedit(HanjpInputContext *self) {
+    int i;
+    HanjpInputContextPrivate *priv;
 
-    // to implement
+    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    priv = hanjp_ic_get_instance_private(self);
+
+    for (i = 0; i < priv->preedit->len; i++) {
+        if (is_hiragana(g_array_index(priv->preedit, gunichar, i))) {
+            g_array_index(priv->preedit, gunichar, i) += KANA_GAP;
+        }
+    }
 }
 
 void hanjp_ic_replace(HanjpInputContext *self, int start, int end, const gunichar* str_insert)
 {
+    int i;
+    HanjpInputContextPrivate *priv;
+
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
     g_return_if_fail(str_insert != NULL);
+    g_return_if_fail(start <= end);
+    priv = hanjp_ic_get_instance_private(self);
 
-    // to implement
+    g_array_remove_range(priv->preedit, start, end - start);
+
+    while (*str_insert)
+    {
+        g_array_insert_val(priv->preedit, start, *str_insert);
+        start++;
+        str_insert++;
+    }
 }
 
 gboolean hanjp_ic_backspace(HanjpInputContext *self)
@@ -217,21 +261,29 @@ GArray* hanjp_ic_ref_hangul_string(HanjpInputContext *self)
 
 void hanjp_ic_set_am(HanjpInputContext *self, gint i)
 {
-    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    HanjpInputContextPrivate *priv;
 
-    // to implement
+    g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
+    priv = hanjp_ic_get_instance_private(self);
+
+    g_object_unref(priv->cur_am);
+    priv->cur_am = g_object_ref(priv->ams[i]);
 }
 
 void hanjp_ic_set_output_mode(HanjpInputContext *self, gint i)
 {
+    HanjpInputContextPrivate *priv;
+
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
 
-    // to implement
+    priv->output_mode = i;
 }
 
 gint hanjp_ic_get_output_mode(HanjpInputContext *self)
 {
+    HanjpInputContextPrivate *priv;
+
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
 
-    // to implement
+    return priv->output_mode;
 }
