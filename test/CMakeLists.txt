@@ -15,7 +15,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 set(tests
-	testing)
+	test_input_context_convert)
 
 enable_testing()
 
