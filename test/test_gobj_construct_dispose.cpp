@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "hanjpautomata.h"
+#include "hanjpkeyboard.h"
 
 TEST(GObjectConstructDisposeTest, AutomataDefaultConstructDispose) {
 	// Given HanjpAutomataDefault object
@@ -26,3 +27,28 @@ TEST(GObjectConstructDisposeTest, AutomataDefaultConstructDispose) {
 		<< "HanjpAutomataDefault destruct failed";
 }
 
+
+TEST(GObjectConstructDisposeTest, KeyboardDefaultConstructDispose) {
+	// Given HanjpKeyboardDefault object
+	HanjpKeyboardDefault *kbDefault = NULL;
+	const char* strExpectObjType = "HanjpKeyboardDefault";
+	const char* strActualObjType = NULL;
+
+	// When constructed
+	kbDefault = hanjp_keyboarddefault_new();
+
+	// Then, object pointer must not be null
+	ASSERT_NE(kbDefault, nullptr)
+		<< "HanjpKeyboardDefault construct failed";
+
+	// Then, object type name must be same as the class name
+	strActualObjType = G_OBJECT_TYPE_NAME(kbDefault);
+	ASSERT_STREQ(strActualObjType, strExpectObjType);
+
+	// When destructed
+	g_object_unref(kbDefault);
+
+	// Then, type check must be false
+	ASSERT_FALSE(G_TYPE_CHECK_INSTANCE(kbDefault))
+		<< "HanjpKeyboardDefault destruct failed";
+}
