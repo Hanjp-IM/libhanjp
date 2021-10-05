@@ -1,6 +1,6 @@
 name: CMake
 
-on: [push]
+on: [push, pull_request]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -17,10 +17,14 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
-    - name: Install libhangul-dev
+    - name: Update Submodules
+      shell: bash
+      run: git submodule init && git submodule update
+    
+    - name: Install Dependencies
       working-directory: ${{github.workspace}}
       shell: bash
-      run: sudo apt update && sudo apt install libhangul-dev
+      run: sudo apt update && sudo apt install libhangul-dev libglib2.0-dev
 
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
@@ -44,7 +48,7 @@ jobs:
       run: cmake --build . --config $BUILD_TYPE
 
     - name: Test
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{github.workspace}}/build/test
       shell: bash
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
