@@ -7,10 +7,10 @@ include(GenerateExportHeader)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GObject REQUIRED gobject-2.0)
-add_subdirectory(libhangul)
+pkg_check_modules(Hangul REQUIRED libhangul)
 add_library(hanjp hanjpautomata.c hanjpinputcontext.c hanjpkeyboard.c)
-target_include_directories(hanjp PUBLIC ${GObject_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/libhangul/hangul)
-target_link_libraries(hanjp ${GObject_LIBRARIES} hangul)
+target_include_directories(hanjp PUBLIC ${GObject_INCLUDE_DIRS} PUBLIC ${Hangul_INCLUDE_DIRS})
+target_link_libraries(hanjp ${GObject_LIBRARIES} ${Hangul_LIBRARIES})
 generate_export_header(hanjp)
 
 add_subdirectory(test)
