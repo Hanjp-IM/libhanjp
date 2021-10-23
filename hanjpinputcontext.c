@@ -132,6 +132,8 @@ gint hanjp_ic_process(HanjpInputContext *self, gint ascii)
     }
     //shrink preedit before push
     g_array_set_size(priv->preedit, priv->kana_len);
+    g_array_set_size(priv->committed, 0);
+    g_array_set_size(priv->hangul, 0);
     //push jaso into automata
     res = hanjp_am_push(priv->cur_am, priv->preedit, priv->hangul, ch);
 
