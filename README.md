@@ -23,4 +23,14 @@ How can we install above?
 ```
 # On ubuntu
 sudo apt update && sudo apt install libglib2.0-dev libhangul-dev
+
+```
+
+## Install with package manager
+
+### ArchLinux [AUR](https://aur.archlinux.org/packages/libhanjp-git/)
+
+```
+git clone https://aur.archlinux.org/libhanjp-git.git
+makepkg -si
 ```
