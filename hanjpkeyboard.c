@@ -15,7 +15,7 @@ gunichar hanjp_kb_get_mapping(HanjpKeyboard* self, gint tableid, gint ascii)
 {
     HanjpKeyboardInterface *iface;
 
-    g_return_if_fail(HANJP_IS_KEYBOARD(self));
+    g_return_if_fail(HANJP_IS_KB(self));
 
     iface = HANJP_KB_GET_IFACE(self);
     g_return_if_fail(iface->get_mapping != NULL);
@@ -26,11 +26,11 @@ typedef struct {
     HangulKeyboard *keyboard;
 } HanjpKeyboardBuiltinPrivate;
 
-static void hanjp_kb_builtin_keyboard_interface_init(HanjpKeyboardInterface *iface);
+static void hanjp_kb_builtin_interface_init(HanjpKeyboardInterface *iface);
 G_DEFINE_TYPE_WITH_CODE(HanjpKeyboardBuiltin, hanjp_kb_builtin, G_TYPE_OBJECT,
         G_ADD_PRIVATE(HanjpKeyboardBuiltin)
-        G_IMPLEMENT_INTERFACE(HANJP_TYPE_KEYBOARD,
-            hanjp_kb_builtin_keyboard_interface_init))
+        G_IMPLEMENT_INTERFACE(HANJP_TYPE_KB,
+            hanjp_kb_builtin_interface_init))
 
 HanjpKeyboardBuiltin *hanjp_kb_builtin_new()
 {
@@ -72,7 +72,7 @@ hanjp_kb_builtin_finalize(GObject *gobject)
 }
 
 static void
-hanjp_kbdefault_class_init(HanjpKeyboardBuiltinClass *klass)
+hanjp_kb_builtin_class_init(HanjpKeyboardBuiltinClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
@@ -81,7 +81,7 @@ hanjp_kbdefault_class_init(HanjpKeyboardBuiltinClass *klass)
 }
 
 static void
-hanjp_kb_builtin_keyboard_interface_init(HanjpKeyboardInterface *iface)
+hanjp_kb_builtin_interface_init(HanjpKeyboardInterface *iface)
 {
     iface->get_mapping = hanjp_kb_builtin_get_mapping;
 }
