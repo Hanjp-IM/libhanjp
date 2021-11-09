@@ -32,26 +32,26 @@ TEST(GObjectConstructDisposeTest, AutomataDefaultConstructDispose) {
 
 TEST(GObjectConstructDisposeTest, KeyboardDefaultConstructDispose) {
 	// Given HanjpKeyboardDefault object
-	HanjpKeyboardDefault *kbDefault = NULL;
+	HanjpKeyboardBuiltin *kbBuiltin = NULL;
 	const char* strExpectObjType = "HanjpKeyboardDefault";
 	const char* strActualObjType = NULL;
 
 	// When constructed
-	kbDefault = hanjp_keyboarddefault_new();
+	kbBuiltin = hanjp_kb_builtin_new();
 
 	// Then, object pointer must not be null
-	ASSERT_NE(kbDefault, nullptr)
+	ASSERT_NE(kbBuiltin, nullptr)
 		<< "HanjpKeyboardDefault construct failed";
 
 	// Then, object type name must be same as the class name
-	strActualObjType = G_OBJECT_TYPE_NAME(kbDefault);
+	strActualObjType = G_OBJECT_TYPE_NAME(kbBuiltin);
 	ASSERT_STREQ(strActualObjType, strExpectObjType);
 
 	// When destructed
-	g_object_unref(kbDefault);
+	g_object_unref(kbBuiltin);
 
 	// Then, type check must be false
-	ASSERT_FALSE(G_TYPE_CHECK_INSTANCE(kbDefault))
+	ASSERT_FALSE(G_TYPE_CHECK_INSTANCE(kbBuiltin))
 		<< "HanjpKeyboardDefault destruct failed";
 }
 

@@ -71,7 +71,7 @@ hanjp_ic_init(HanjpInputContext *self)
     priv->ams[0] = HANJP_AUTOMATA(hanjp_amdefault_new());
     priv->ams[1] = NULL;
     priv->cur_am = g_object_ref(priv->ams[0]);
-    priv->keyboard = HANJP_KEYBOARD(hanjp_keyboarddefault_new());
+    priv->keyboard = HANJP_KB(hanjp_kb_builtin_new());
     priv->preedit = g_array_sized_new(TRUE, TRUE, sizeof(gunichar), 64);
     priv->committed = g_array_sized_new(TRUE, TRUE, sizeof(gunichar), 64);
     priv->hangul = g_array_sized_new(TRUE, TRUE, sizeof(gunichar), 64);
@@ -126,7 +126,7 @@ gint hanjp_ic_process(HanjpInputContext *self, gint ascii)
     priv = hanjp_ic_get_instance_private(self);
 
     //map jaso from ascii
-    ch = hanjp_keyboard_get_mapping(priv->keyboard, 0, ascii);
+    ch = hanjp_kb_get_mapping(priv->keyboard, 0, ascii);
     if(ch == 0) {
         ch = (gunichar)ascii;
     }
