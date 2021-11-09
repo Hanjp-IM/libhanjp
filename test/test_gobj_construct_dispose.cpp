@@ -6,34 +6,34 @@
 
 TEST(GObjectConstructDisposeTest, AutomataDefaultConstructDispose) {
 	// Given HanjpAutomataDefault object
-	HanjpAutomataDefault *amDefault = NULL;
-	const char* strExpectObjType = "HanjpAutomataDefault";
+	HanjpAutomataBuiltin *amBuiltin = NULL;
+	const char* strExpectObjType = "HanjpAutomataBuiltin";
 	const char* strActualObjType = NULL;
 
 	// When constructed
-	amDefault = hanjp_amdefault_new();
+	amBuiltin = hanjp_am_builtin_new();
 
 	// Then, object pointer must not be null
-	ASSERT_NE(amDefault, nullptr)
-		<< "HanjpAutomataDefault construct failed";
+	ASSERT_NE(amBuiltin, nullptr)
+		<< "HanjpAutomataBuiltin construct failed";
 	
 	// Then, object type name must be same as the class name
-	strActualObjType = G_OBJECT_TYPE_NAME(amDefault);
+	strActualObjType = G_OBJECT_TYPE_NAME(amBuiltin);
 	ASSERT_STREQ(strActualObjType, strExpectObjType);
 
 	// When destructed
-	g_object_unref(amDefault);
+	g_object_unref(amBuiltin);
 
 	// Then, type check must be false
-	ASSERT_FALSE(G_TYPE_CHECK_INSTANCE(amDefault))
-		<< "HanjpAutomataDefault destruct failed";
+	ASSERT_FALSE(G_TYPE_CHECK_INSTANCE(amBuiltin))
+		<< "HanjpAutomataBuiltin destruct failed";
 }
 
 
 TEST(GObjectConstructDisposeTest, KeyboardDefaultConstructDispose) {
 	// Given HanjpKeyboardDefault object
 	HanjpKeyboardBuiltin *kbBuiltin = NULL;
-	const char* strExpectObjType = "HanjpKeyboardDefault";
+	const char* strExpectObjType = "HanjpKeyboardBuiltin";
 	const char* strActualObjType = NULL;
 
 	// When constructed
@@ -41,7 +41,7 @@ TEST(GObjectConstructDisposeTest, KeyboardDefaultConstructDispose) {
 
 	// Then, object pointer must not be null
 	ASSERT_NE(kbBuiltin, nullptr)
-		<< "HanjpKeyboardDefault construct failed";
+		<< "HanjpKeyboardBuiltin construct failed";
 
 	// Then, object type name must be same as the class name
 	strActualObjType = G_OBJECT_TYPE_NAME(kbBuiltin);
@@ -52,7 +52,7 @@ TEST(GObjectConstructDisposeTest, KeyboardDefaultConstructDispose) {
 
 	// Then, type check must be false
 	ASSERT_FALSE(G_TYPE_CHECK_INSTANCE(kbBuiltin))
-		<< "HanjpKeyboardDefault destruct failed";
+		<< "HanjpKeyboardBuiltin destruct failed";
 }
 
 

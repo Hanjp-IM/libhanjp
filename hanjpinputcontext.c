@@ -68,7 +68,7 @@ hanjp_ic_init(HanjpInputContext *self)
     HanjpInputContextPrivate *priv;
     priv = hanjp_ic_get_instance_private(self);
 
-    priv->ams[0] = HANJP_AUTOMATA(hanjp_amdefault_new());
+    priv->ams[0] = HANJP_AM(hanjp_am_builtin_new());
     priv->ams[1] = NULL;
     priv->cur_am = g_object_ref(priv->ams[0]);
     priv->keyboard = HANJP_KB(hanjp_kb_builtin_new());

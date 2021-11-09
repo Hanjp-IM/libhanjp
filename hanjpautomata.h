@@ -16,8 +16,8 @@ typedef union {
     gunichar stack[4];
 } HanjpBuffer;
 
-#define HANJP_TYPE_AUTOMATA hanjp_am_get_type()
-G_DECLARE_INTERFACE(HanjpAutomata, hanjp_am, HANJP, AUTOMATA, GObject)
+#define HANJP_TYPE_AM hanjp_am_get_type()
+G_DECLARE_INTERFACE(HanjpAutomata, hanjp_am, HANJP, AM, GObject)
 
 struct _HanjpAutomataInterface
 {
@@ -34,8 +34,8 @@ gint hanjp_am_push(HanjpAutomata *am, GArray *preedit, GArray *hangul, gunichar 
 gboolean hanjp_am_backspace(HanjpAutomata *am);
 void hanjp_am_flush(HanjpAutomata *am);
 
-#define HANJP_TYPE_AUTOMATABASE hanjp_ambase_get_type()
-G_DECLARE_DERIVABLE_TYPE(HanjpAutomataBase, hanjp_ambase, HANJP, AUTOMATABASE, GObject)
+#define HANJP_TYPE_AM_BASE hanjp_am_base_get_type()
+G_DECLARE_DERIVABLE_TYPE(HanjpAutomataBase, hanjp_am_base, HANJP, AM_BASE, GObject)
 
 struct _HanjpAutomataBaseClass
 {
@@ -47,15 +47,15 @@ struct _HanjpAutomataBaseClass
     void (*flush) (HanjpAutomata *self);
 };
 
-#define HANJP_TYPE_AUTOMATADEFAULT hanjp_amdefault_get_type()
-G_DECLARE_DERIVABLE_TYPE(HanjpAutomataDefault, hanjp_amdefault, HANJP, AUTOMATADEFAULT, HanjpAutomataBase)
+#define HANJP_TYPE_AM_BUILTIN hanjp_am_builtin_get_type()
+G_DECLARE_DERIVABLE_TYPE(HanjpAutomataBuiltin, hanjp_am_builtin, HANJP, AM_BUILTIN, HanjpAutomataBase)
 
-struct _HanjpAutomataDefaultClass
+struct _HanjpAutomataBuiltinClass
 {
     HanjpAutomataBaseClass parent_class;
 };
 
-HanjpAutomataDefault *hanjp_amdefault_new();
+HanjpAutomataBuiltin *hanjp_am_builtin_new();
 
 G_END_DECLS
 
