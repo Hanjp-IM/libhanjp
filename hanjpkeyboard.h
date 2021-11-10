@@ -5,8 +5,8 @@
 
 G_BEGIN_DECLS
 
-#define HANJP_TYPE_KEYBOARD hanjp_keyboard_get_type()
-G_DECLARE_INTERFACE(HanjpKeyboard, hanjp_keyboard, HANJP, KEYBOARD, GObject)
+#define HANJP_TYPE_KB hanjp_kb_get_type()
+G_DECLARE_INTERFACE(HanjpKeyboard, hanjp_kb, HANJP, KB, GObject)
 
 struct _HanjpKeyboardInterface {
     GTypeInterface parent_iface;
@@ -14,16 +14,16 @@ struct _HanjpKeyboardInterface {
     gunichar (*get_mapping) (HanjpKeyboard *self, gint tableid, gint ascii);
 };
 
-gunichar hanjp_keyboard_get_mapping(HanjpKeyboard *self, gint tableid, gint ascii);
+gunichar hanjp_kb_get_mapping(HanjpKeyboard *self, gint tableid, gint ascii);
 
-#define HANJP_TYPE_KEYBOARDDEFAULT hanjp_keyboarddefault_get_type()
-G_DECLARE_DERIVABLE_TYPE(HanjpKeyboardDefault, hanjp_keyboarddefault, HANJP, KEYBOARDDEFAULT, GObject)
+#define HANJP_TYPE_KEYBOARDDEFAULT hanjp_kb_builtin_get_type()
+G_DECLARE_DERIVABLE_TYPE(HanjpKeyboardBuiltin, hanjp_kb_builtin, HANJP, KB_BUILTIN, GObject)
 
-struct _HanjpKeyboardDefaultClass {
+struct _HanjpKeyboardBuiltinClass {
     GObjectClass parent_class;
 };
 
-HanjpKeyboardDefault *hanjp_keyboarddefault_new();
+HanjpKeyboardBuiltin *hanjp_kb_builtin_new();
 
 G_END_DECLS
 

@@ -145,9 +145,9 @@ hanjp_am_default_init(HanjpAutomataInterface *iface) {
 gint hanjp_am_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer) {
     HanjpAutomataInterface *iface;
 
-    g_return_if_fail(HANJP_IS_AUTOMATA(am));
+    g_return_if_fail(HANJP_IS_AM(am));
     
-    iface = HANJP_AUTOMATA_GET_IFACE(am);
+    iface = HANJP_AM_GET_IFACE(am);
     g_return_if_fail(iface->to_kana != NULL);
     return iface->to_kana(am, dest, buffer);
 }
@@ -155,9 +155,9 @@ gint hanjp_am_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer) {
 gint hanjp_am_push(HanjpAutomata *am, GArray *result, GArray *hangul, gunichar ch) {
     HanjpAutomataInterface *iface;
 
-    g_return_if_fail(HANJP_IS_AUTOMATA(am));
+    g_return_if_fail(HANJP_IS_AM(am));
     
-    iface = HANJP_AUTOMATA_GET_IFACE(am);
+    iface = HANJP_AM_GET_IFACE(am);
     g_return_if_fail(iface->push != NULL);
     return iface->push(am, result, hangul, ch);
 }
@@ -165,9 +165,9 @@ gint hanjp_am_push(HanjpAutomata *am, GArray *result, GArray *hangul, gunichar c
 gboolean hanjp_am_backspace(HanjpAutomata *am) {
     HanjpAutomataInterface *iface;
 
-    g_return_if_fail(HANJP_IS_AUTOMATA(am));
+    g_return_if_fail(HANJP_IS_AM(am));
 
-    iface = HANJP_AUTOMATA_GET_IFACE(am);
+    iface = HANJP_AM_GET_IFACE(am);
     g_return_if_fail(iface->backspace != NULL);
     return iface->backspace(am);
 }
@@ -175,9 +175,9 @@ gboolean hanjp_am_backspace(HanjpAutomata *am) {
 void hanjp_am_flush(HanjpAutomata *am) {
     HanjpAutomataInterface *iface;
 
-    g_return_if_fail(HANJP_IS_AUTOMATA(am));
+    g_return_if_fail(HANJP_IS_AM(am));
 
-    iface = HANJP_AUTOMATA_GET_IFACE(am);
+    iface = HANJP_AM_GET_IFACE(am);
     g_return_if_fail(iface->flush != NULL);
     iface->flush(am);
 }
@@ -191,10 +191,10 @@ typedef struct {
     guint32 combine_table_vals[N_COMBINE_TABLE_ELEMENTS];
 } HanjpAutomataBasePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(HanjpAutomataBase, hanjp_ambase, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE(HanjpAutomataBase, hanjp_am_base, G_TYPE_OBJECT)
 
 static gint
-hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
+hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
 {
     gint r = 0;
     gint adj;
@@ -204,7 +204,7 @@ hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
     gunichar *val;
     HanjpAutomataBasePrivate *priv;
 
-    priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
+    priv = hanjp_am_base_get_instance_private(HANJP_AM_BASE(am));
 
     for(i = 0; i < 4; i++) {
         if(buffer->stack[i] != 0 && !hangul_is_jamo(buffer->stack[i])) {
@@ -382,7 +382,7 @@ hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
             ch = kana_nn; break;
             default:
             buffer->cho = hangul_jongseong_to_choseong(buffer->jong);
-            return r + hanjp_ambase_to_kana(am, dest, buffer);
+            return r + hanjp_am_base_to_kana(am, dest, buffer);
         }
         g_array_append_val(dest, ch);
         r++;
@@ -392,7 +392,7 @@ hanjp_ambase_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
 }
 
 static void
-hanjp_ambase_peek(HanjpAutomata *am, GArray *hangul)
+hanjp_am_base_peek(HanjpAutomata *am, GArray *hangul)
 {
     JungBox jungkey;
     gunichar c;
@@ -400,7 +400,7 @@ hanjp_ambase_peek(HanjpAutomata *am, GArray *hangul)
     gint i;
     HanjpAutomataBasePrivate *priv;
 
-    priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
+    priv = hanjp_am_base_get_instance_private(HANJP_AM_BASE(am));
 
     if(priv->buffer.jung == 0) {
         priv->buffer.jung = priv->buffer.jung2;
@@ -434,28 +434,28 @@ hanjp_ambase_peek(HanjpAutomata *am, GArray *hangul)
 }
 
 static gboolean
-hanjp_ambase_backspace(HanjpAutomata *am)
+hanjp_am_base_backspace(HanjpAutomata *am)
 {
     int i;
     HanjpAutomataBasePrivate *priv;
-    priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
+    priv = hanjp_am_base_get_instance_private(HANJP_AM_BASE(am));
 
     return (hanjp_buffer_pop(&priv->buffer) != 0);
 }
 
 static void
-hanjp_ambase_flush(HanjpAutomata *am)
+hanjp_am_base_flush(HanjpAutomata *am)
 {
     HanjpAutomataBasePrivate *priv;
-    priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
+    priv = hanjp_am_base_get_instance_private(HANJP_AM_BASE(am));
     hanjp_buffer_flush(&priv->buffer);
 }
 
 static void
-hanjp_ambase_init(HanjpAutomataBase *am)
+hanjp_am_base_init(HanjpAutomataBase *am)
 {
     HanjpAutomataBasePrivate *priv;
-    priv = hanjp_ambase_get_instance_private(am);
+    priv = hanjp_am_base_get_instance_private(am);
 
     priv->buffer.cho = 0;
     priv->buffer.jung = 0;
@@ -466,40 +466,40 @@ hanjp_ambase_init(HanjpAutomataBase *am)
 }
 
 static void
-hanjp_ambase_finalize(GObject *gobject)
+hanjp_am_base_finalize(GObject *gobject)
 {
     HanjpAutomataBasePrivate *priv;
-    priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(gobject));
+    priv = hanjp_am_base_get_instance_private(HANJP_AM_BASE(gobject));
 
     g_hash_table_destroy(priv->combine_table);
 
-    G_OBJECT_CLASS(hanjp_ambase_parent_class)->finalize(gobject);
+    G_OBJECT_CLASS(hanjp_am_base_parent_class)->finalize(gobject);
 }
 
 static void
-hanjp_ambase_class_init(HanjpAutomataBaseClass *klass)
+hanjp_am_base_class_init(HanjpAutomataBaseClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
     
-    object_class->finalize = hanjp_ambase_finalize;
+    object_class->finalize = hanjp_am_base_finalize;
 
-    klass->to_kana = hanjp_ambase_to_kana;
+    klass->to_kana = hanjp_am_base_to_kana;
     klass->push = NULL;
-    klass->backspace = hanjp_ambase_backspace;
-    klass->flush = hanjp_ambase_flush;
+    klass->backspace = hanjp_am_base_backspace;
+    klass->flush = hanjp_am_base_flush;
    
 }
 
-static void hanjp_default_am_interface_init(HanjpAutomataInterface *iface);
-G_DEFINE_TYPE_WITH_CODE(HanjpAutomataDefault, hanjp_amdefault, HANJP_TYPE_AUTOMATABASE,
-        G_IMPLEMENT_INTERFACE(HANJP_TYPE_AUTOMATA,
-                hanjp_default_am_interface_init))
+static void hanjp_am_builtin_interface_init(HanjpAutomataInterface *iface);
+G_DEFINE_TYPE_WITH_CODE(HanjpAutomataBuiltin, hanjp_am_builtin, HANJP_TYPE_AM_BASE,
+        G_IMPLEMENT_INTERFACE(HANJP_TYPE_AM,
+                hanjp_am_builtin_interface_init))
 
 static void
-hanjp_amdefault_init(HanjpAutomataDefault *am)
+hanjp_am_builtin_init(HanjpAutomataBuiltin *am)
 {
     HanjpAutomataBasePrivate *priv;
-    priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
+    priv = hanjp_am_base_get_instance_private(HANJP_AM_BASE(am));
     priv->combine_table_keys[0].jung = HANJP_JUNGSEONG_O;
     priv->combine_table_keys[0].jung2 = HANJP_JUNGSEONG_A;
     priv->combine_table_vals[0] = HANJP_JUNGSEONG_WA;
@@ -508,13 +508,13 @@ hanjp_amdefault_init(HanjpAutomataDefault *am)
 }
 
 static gint
-hanjp_amdefault_push(HanjpAutomata *am, GArray *preedit, GArray *hangul, gunichar ch)
+hanjp_am_builtin_push(HanjpAutomata *am, GArray *preedit, GArray *hangul, gunichar ch)
 {
     gint r = 0;
     HanjpAutomataBasePrivate *priv;
     HanjpBuffer *buffer;
 
-    priv = hanjp_ambase_get_instance_private(HANJP_AUTOMATABASE(am));
+    priv = hanjp_am_base_get_instance_private(HANJP_AM_BASE(am));
     buffer = &priv->buffer;
 
     if(ch == 0) {
@@ -527,8 +527,8 @@ hanjp_amdefault_push(HanjpAutomata *am, GArray *preedit, GArray *hangul, gunicha
     // post-step
     // convert poped string to kana
     if(ch != 0 && buffer->jong == 0) {
-        hanjp_ambase_peek(am, hangul);
-        r = hanjp_ambase_to_kana(am, preedit, buffer);
+        hanjp_am_base_peek(am, hangul);
+        r = hanjp_am_base_to_kana(am, preedit, buffer);
         if(!hangul_is_jamo(ch)) {
             g_array_append_val(hangul, ch);
             g_array_append_val(preedit, ch);
@@ -539,29 +539,29 @@ hanjp_amdefault_push(HanjpAutomata *am, GArray *preedit, GArray *hangul, gunicha
             hanjp_buffer_push(buffer, ch);
         }
     }
-    hanjp_ambase_peek(am, preedit);
+    hanjp_am_base_peek(am, preedit);
 
     return r;
 }
 
 static void
-hanjp_amdefault_class_init(HanjpAutomataDefaultClass *klass)
+hanjp_am_builtin_class_init(HanjpAutomataBuiltinClass *klass)
 {
-    HanjpAutomataBaseClass *base_class = HANJP_AUTOMATABASE_CLASS(klass);
+    HanjpAutomataBaseClass *base_class = HANJP_AM_BASE_CLASS(klass);
 
-    base_class->push = hanjp_amdefault_push;
+    base_class->push = hanjp_am_builtin_push;
 }
 
-HanjpAutomataDefault *hanjp_amdefault_new()
+HanjpAutomataBuiltin *hanjp_am_builtin_new()
 {
-    return g_object_new(HANJP_TYPE_AUTOMATADEFAULT, NULL);
+    return g_object_new(HANJP_TYPE_AM_BUILTIN, NULL);
 }
 
 static void
-hanjp_default_am_interface_init(HanjpAutomataInterface *iface)
+hanjp_am_builtin_interface_init(HanjpAutomataInterface *iface)
 {
-    iface->to_kana = hanjp_ambase_to_kana;
-    iface->push = hanjp_amdefault_push;
-    iface->backspace = hanjp_ambase_backspace;
-    iface->flush = hanjp_ambase_flush;
+    iface->to_kana = hanjp_am_base_to_kana;
+    iface->push = hanjp_am_builtin_push;
+    iface->backspace = hanjp_am_base_backspace;
+    iface->flush = hanjp_am_base_flush;
 }
