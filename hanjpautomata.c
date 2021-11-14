@@ -85,28 +85,28 @@ hanjp_buffer_flush(HanjpBuffer *buffer) {
 
 /* Kana Table index enums */
 enum {
-    HANJP_VOWEL_A,
-    HANJP_VOWEL_I,
-    HANJP_VOWEL_U,
-    HANJP_VOWEL_E,
-    HANJP_VOWEL_O
+    KANA_VOWEL_A,
+    KANA_VOWEL_I,
+    KANA_VOWEL_U,
+    KANA_VOWEL_E,
+    KANA_VOWEL_O
 };
 
 enum {
-    HANJP_CONSONANT__,
-    HANJP_CONSONANT_K,
-    HANJP_CONSONANT_S,
-    HANJP_CONSONANT_T,
-    HANJP_CONSONANT_N,
-    HANJP_CONSONANT_H,
-    HANJP_CONSONANT_M,
-    HANJP_CONSONANT_Y,
-    HANJP_CONSONANT_R,
-    HANJP_CONSONANT_W
+    KANA_CONSONANT__,
+    KANA_CONSONANT_K,
+    KANA_CONSONANT_S,
+    KANA_CONSONANT_T,
+    KANA_CONSONANT_N,
+    KANA_CONSONANT_H,
+    KANA_CONSONANT_M,
+    KANA_CONSONANT_Y,
+    KANA_CONSONANT_R,
+    KANA_CONSONANT_W
 };
 
 // Fifty notes
-// For example か(ka) = kana_table[HANJP_CONSONANT_K][HANJP_VOWEL_A]
+// For example か(ka) = kana_table[KANA_CONSONANT_K][KANA_VOWEL_A]
 static const gunichar kana_table[][5] = {
     // A, I, U, E, O
     {0x3042, 0x3044, 0x3046, 0x3048, 0x304A}, // A
@@ -223,15 +223,17 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
 
     // Replace Choseong filler and Jungseong filler with '0'
     for(i = 0; i < 4; i++) {
-        if(buffer->stack[i] == HANJP_CHOSEONG_FILLER || buffer->stack[i] == HANJP_JUNGSEONG_FILLER) {
+        if(buffer->stack[i] == HANGUL_CHOSEONG_FILLER
+				|| buffer->stack[i] == HANGUL_JUNGSEONG_FILLER) {
             buffer->stack[i] = 0;
         }
+        buffer->cho = 0;
     }
 
     // check whether batchim is available and move choseong to jongseong if conditions are met
     if(buffer->cho != 0 && buffer->jung == 0 && dest->len != 0) {
         ch = g_array_index(dest, gunichar, dest->len - 1); // Last kana character
-        if(ch != kana_nn && ch != kana_table[HANJP_CONSONANT_T][HANJP_VOWEL_U] - 1) {
+        if(ch != kana_nn && ch != kana_table[KANA_CONSONANT_T][KANA_VOWEL_U] - 1) {
             buffer->jong = hangul_choseong_to_jongseong(buffer->cho);
             buffer->cho = 0;
         }
@@ -246,38 +248,38 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
         switch(ch) {
             case 0:         // VOID
             adj = -1;
-            case HANJP_CHOSEONG_IEUNG:         // ㅇ
-            i = HANJP_CONSONANT__; break;
-            case HANJP_CHOSEONG_KIYEOK:        // ㄱ
+            case HANGUL_CHOSEONG_IEUNG:         // ㅇ
+            i = KANA_CONSONANT__; break;
+            case HANGUL_CHOSEONG_KIYEOK:        // ㄱ
             adj = 1;
-            case HANJP_CHOSEONG_KHIEUKH:       // ㅋ
-            case HANJP_CHOSEONG_SSANGKIYEOK:   // ㄲ
-            i = HANJP_CONSONANT_K; break;   // K
-            case HANJP_CHOSEONG_CIEUC:         // ㅈ
+            case HANGUL_CHOSEONG_KHIEUKH:       // ㅋ
+            case HANGUL_CHOSEONG_SSANGKIYEOK:   // ㄲ
+            i = KANA_CONSONANT_K; break;   // K
+            case HANGUL_CHOSEONG_CIEUC:         // ㅈ
             adj = 1;
-            case HANJP_CHOSEONG_SIOS:          // ㅅ
-            case HANJP_CHOSEONG_SSANGSIOS:     // ㅆ
-            i = HANJP_CONSONANT_S; break;   // S
-            case HANJP_CHOSEONG_TIKEUT:        // ㄷ
+            case HANGUL_CHOSEONG_SIOS:          // ㅅ
+            case HANGUL_CHOSEONG_SSANGSIOS:     // ㅆ
+            i = KANA_CONSONANT_S; break;   // S
+            case HANGUL_CHOSEONG_TIKEUT:        // ㄷ
             adj = 1;
-            case HANJP_CHOSEONG_SSANGTIKEUT:   // ㄸ
-            case HANJP_CHOSEONG_CHIEUCH:       // ㅊ
-            case HANJP_CHOSEONG_THIEUTH:       // ㅌ
-            i = HANJP_CONSONANT_T; break;   // T
-            case HANJP_CHOSEONG_NIEUN:         // ㄴ
-            i = HANJP_CONSONANT_N; break;   // N
-            case HANJP_CHOSEONG_PHIEUPH:       // ㅍ
-            case HANJP_CHOSEONG_SSANGPIEUP:    // ㅃ
-            adj = 1;
-            case HANJP_CHOSEONG_PIEUP:
+            case HANGUL_CHOSEONG_SSANGTIKEUT:   // ㄸ
+            case HANGUL_CHOSEONG_CHIEUCH:       // ㅊ
+            case HANGUL_CHOSEONG_THIEUTH:       // ㅌ
+            i = KANA_CONSONANT_T; break;   // T
+            case HANGUL_CHOSEONG_NIEUN:         // ㄴ
+            i = KANA_CONSONANT_N; break;   // N
+            case HANGUL_CHOSEONG_PHIEUPH:       // ㅍ
+            case HANGUL_CHOSEONG_SSANGPIEUP:    // ㅃ
+			adj = 1;
+			case HANGUL_CHOSEONG_PIEUP:			// ㅂ
             adj += 1;
-            case HANJP_CHOSEONG_HIEUH:         // ㅎ
-            i = HANJP_CONSONANT_H; break;   // H
-            case HANJP_CHOSEONG_MIEUM:         // ㅁ
-            i = HANJP_CONSONANT_M; break;   // M
-            case HANJP_CHOSEONG_RIEUL:         // ㄹ
-            i = HANJP_CONSONANT_R; break;   // R
-            case HANJP_CHOSEONG_SSANGNIEUN:
+            case HANGUL_CHOSEONG_HIEUH:         // ㅎ
+            i = KANA_CONSONANT_H; break;   // H
+            case HANGUL_CHOSEONG_MIEUM:         // ㅁ
+            i = KANA_CONSONANT_M; break;   // M
+            case HANGUL_CHOSEONG_RIEUL:         // ㄹ
+            i = KANA_CONSONANT_R; break;   // R
+            case HANGUL_CHOSEONG_SSANGNIEUN:
             g_array_append_val(dest, kana_nn);
             r++;
             continue;
@@ -313,31 +315,31 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
         // Divide Jungseong into eatable
         ch = buffer->jung;
         switch(ch) {
-            case HANJP_JUNGSEONG_WA:
-            if(i == HANJP_CONSONANT__) {
-                i = HANJP_CONSONANT_W;
+            case HANGUL_JUNGSEONG_WA:
+            if(i == KANA_CONSONANT__) {
+                i = KANA_CONSONANT_W;
             }
             else {
-                buffer->jung = HANJP_JUNGSEONG_O;
-                buffer->jung2 = HANJP_JUNGSEONG_A;
+                buffer->jung = HANGUL_JUNGSEONG_O;
+                buffer->jung2 = HANGUL_JUNGSEONG_A;
             }
             break;
-            case HANJP_JUNGSEONG_YA:
-            case HANJP_JUNGSEONG_YU:
-            case HANJP_JUNGSEONG_YO:
-            case HANJP_JUNGSEONG_YEO:
-            if(i == HANJP_CONSONANT__) {
-                i = HANJP_CONSONANT_Y;
+            case HANGUL_JUNGSEONG_YA:
+            case HANGUL_JUNGSEONG_YU:
+            case HANGUL_JUNGSEONG_YO:
+            case HANGUL_JUNGSEONG_YEO:
+            if(i == KANA_CONSONANT__) {
+                i = KANA_CONSONANT_Y;
             }
             else{
-                buffer->jung = HANJP_JUNGSEONG_I;
+                buffer->jung = HANGUL_JUNGSEONG_I;
                 buffer->jung2 = ch;
             }
             break;
-            case HANJP_JUNGSEONG_YE:
-            case HANJP_JUNGSEONG_YAE:
-            buffer->jung = HANJP_JUNGSEONG_I;
-            buffer->jung2 = HANJP_JUNGSEONG_E;
+            case HANGUL_JUNGSEONG_YE:
+            case HANGUL_JUNGSEONG_YAE:
+            buffer->jung = HANGUL_JUNGSEONG_I;
+            buffer->jung2 = HANGUL_JUNGSEONG_E;
             break;
         }
 
@@ -345,25 +347,25 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
         ch = buffer->jung; // victim
         buffer->jung = 0;
         switch(ch) {
-            case HANJP_JUNGSEONG_WA:
-            case HANJP_JUNGSEONG_YA:
-            case HANJP_JUNGSEONG_A:
-            j = HANJP_VOWEL_A; break;
-            case HANJP_JUNGSEONG_I:
-            j = HANJP_VOWEL_I; break;
-            case HANJP_JUNGSEONG_YU:
-            case HANJP_JUNGSEONG_EU:
-            case HANJP_JUNGSEONG_U:
+            case HANGUL_JUNGSEONG_WA:
+            case HANGUL_JUNGSEONG_YA:
+            case HANGUL_JUNGSEONG_A:
+            j = KANA_VOWEL_A; break;
+            case HANGUL_JUNGSEONG_I:
+            j = KANA_VOWEL_I; break;
+            case HANGUL_JUNGSEONG_YU:
+            case HANGUL_JUNGSEONG_EU:
+            case HANGUL_JUNGSEONG_U:
             case 0:
-            j = HANJP_VOWEL_U; break;
-            case HANJP_JUNGSEONG_AE:
-            case HANJP_JUNGSEONG_E:
-            j = HANJP_VOWEL_E; break;
-            case HANJP_JUNGSEONG_YO:
-            case HANJP_JUNGSEONG_YEO:
-            case HANJP_JUNGSEONG_EO:
-            case HANJP_JUNGSEONG_O:
-            j = HANJP_VOWEL_O; break;
+            j = KANA_VOWEL_U; break;
+            case HANGUL_JUNGSEONG_AE:
+            case HANGUL_JUNGSEONG_E:
+            j = KANA_VOWEL_E; break;
+            case HANGUL_JUNGSEONG_YO:
+            case HANGUL_JUNGSEONG_YEO:
+            case HANGUL_JUNGSEONG_EO:
+            case HANGUL_JUNGSEONG_O:
+            j = KANA_VOWEL_O; break;
             default:
             for(i = 0; i < 4; i++) {
                 ch = buffer->stack[i];
@@ -385,17 +387,17 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
     buffer->jong = 0;
     if(ch != 0) {
         switch(ch) {
-            case HANJP_JONGSEONG_KIYEOK:
-            case HANJP_JONGSEONG_SSANGKIYEOK:
-            case HANJP_JONGSEONG_SIOS:
-            case HANJP_JONGSEONG_SSANGSIOS:
-            case HANJP_JONGSEONG_KHIEUKH:
-            ch = kana_table[HANJP_CONSONANT_T][HANJP_VOWEL_U] - 1; break;
-            case HANJP_JONGSEONG_NIEUN:
-            case HANJP_JONGSEONG_MIEUM:
-            case HANJP_JONGSEONG_PIEUP:
-            case HANJP_JONGSEONG_PHIEUPH:
-            case HANJP_JONGSEONG_IEUNG:
+            case HANGUL_JONGSEONG_KIYEOK:
+            case HANGUL_JONGSEONG_SSANGKIYEOK:
+            case HANGUL_JONGSEONG_SIOS:
+            case HANGUL_JONGSEONG_SSANGSIOS:
+            case HANGUL_JONGSEONG_KHIEUKH:
+            ch = kana_table[KANA_CONSONANT_T][KANA_VOWEL_U] - 1; break;
+            case HANGUL_JONGSEONG_NIEUN:
+            case HANGUL_JONGSEONG_MIEUM:
+            case HANGUL_JONGSEONG_PIEUP:
+            case HANGUL_JONGSEONG_PHIEUPH:
+            case HANGUL_JONGSEONG_IEUNG:
             ch = kana_nn; break;
             default:
             buffer->cho = hangul_jongseong_to_choseong(ch);
@@ -519,9 +521,9 @@ hanjp_am_builtin_init(HanjpAutomataBuiltin *am)
 {
     HanjpAutomataBasePrivate *priv;
     priv = hanjp_am_base_get_instance_private(HANJP_AM_BASE(am));
-    priv->combine_table_keys[0].jung = HANJP_JUNGSEONG_O;
-    priv->combine_table_keys[0].jung2 = HANJP_JUNGSEONG_A;
-    priv->combine_table_vals[0] = HANJP_JUNGSEONG_WA;
+    priv->combine_table_keys[0].jung = HANGUL_JUNGSEONG_O;
+    priv->combine_table_keys[0].jung2 = HANGUL_JUNGSEONG_A;
+    priv->combine_table_vals[0] = HANGUL_JUNGSEONG_WA;
 
     g_hash_table_insert(priv->combine_table, &priv->combine_table_keys[0].value, &priv->combine_table_vals[0]);
 }
