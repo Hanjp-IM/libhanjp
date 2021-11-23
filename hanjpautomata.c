@@ -238,7 +238,7 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
     }
     
     //eat Choseong and Jungseong
-    while(buffer->cho || buffer->jung) {
+    while(buffer->cho || buffer->jung || buffer->jung2) {
         adj = 0;
         ch = buffer->cho; // victim
         buffer->cho = 0;
@@ -285,8 +285,8 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
             return -1;
         }
 
-        // reduce jung
-        ch = buffer->jung2;
+        // Reduce Jungseong to single character
+        ch = buffer->jung2; // victim
         buffer->jung2 = 0;
         if(buffer->jung == 0) {
             buffer->jung = ch;
@@ -303,9 +303,8 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
             }
         }
 
-        // divide jungseong
-        ch = buffer->jung;
-        switch(ch) {
+        // Divide Jungseong into eatable
+        switch(buffer->jung) {
             case HANJP_JUNGSEONG_WA:
             if(i == HANJP_CONSONANT__) {
                 i = HANJP_CONSONANT_W;
@@ -335,7 +334,7 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
         }
 
         //select column index
-        ch = buffer->jung;
+        ch = buffer->jung; // victim
         buffer->jung = 0;
         switch(ch) {
             case HANJP_JUNGSEONG_WA:
