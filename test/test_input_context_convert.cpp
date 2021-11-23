@@ -38,3 +38,21 @@ TEST_F(InputContextTest, IC_Hajimemashite) {
     g_array_unref(committed);
 }
 
+TEST_F(InputContextTest, IC_KYOUWAKOKU) {
+    const char *strGivenKeyInput = "zydndhkzhzn.";
+    const char *strExpectJapenese = "きょうわこく.";
+    const char *strActualJapanese = NULL;
+
+    GArray *committed = hanjp_ic_ref_commit_string(context);
+
+    while(*strGivenKeyInput) {
+        hanjp_ic_process(context, (gint)(*strGivenKeyInput));
+        strGivenKeyInput++;
+    }
+    strActualJapanese = g_ucs4_to_utf8((const gunichar*)committed->data, committed->len, NULL, NULL, NULL);
+
+    EXPECT_STREQ(strActualJapanese, strExpectJapenese);
+
+    g_array_unref(committed);
+}
+
