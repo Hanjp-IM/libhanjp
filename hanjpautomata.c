@@ -304,7 +304,8 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
         }
 
         // Divide Jungseong into eatable
-        switch(buffer->jung) {
+        ch = buffer->jung;
+        switch(ch) {
             case HANJP_JUNGSEONG_WA:
             if(i == HANJP_CONSONANT__) {
                 i = HANJP_CONSONANT_W;
