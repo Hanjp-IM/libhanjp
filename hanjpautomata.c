@@ -83,7 +83,7 @@ hanjp_buffer_flush(HanjpBuffer *buffer) {
 
 /**/
 
-/* Consts about to_kana convertion */
+/* Kana Table index enums */
 enum {
     HANJP_VOWEL_A,
     HANJP_VOWEL_I,
@@ -122,7 +122,7 @@ static const gunichar kana_table[][5] = {
 };
 static const gunichar kana_nn = 0x3093;
 
-/* Combine multiple JungSeong int single code */
+// Combine multiple JungSeong into single int code
 typedef union {
     struct {
         gunichar jung;
@@ -134,7 +134,7 @@ typedef union {
 #define N_COMBINE_TABLE_ELEMENTS 30
 
 
-/* Interface Definition */
+/* Automata Interface Definition */
 G_DEFINE_INTERFACE(HanjpAutomata, hanjp_am, G_TYPE_OBJECT)
 
 static void
@@ -184,6 +184,7 @@ void hanjp_am_flush(HanjpAutomata *am) {
 
 /**/
 
+/* AutomataBase Implementation */
 typedef struct {
     HanjpBuffer buffer;
     GHashTable *combine_table;
@@ -206,41 +207,42 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
 
     priv = hanjp_am_base_get_instance_private(HANJP_AM_BASE(am));
 
+    // Check buffer
     for(i = 0; i < 4; i++) {
         if(buffer->stack[i] != 0 && !hangul_is_jamo(buffer->stack[i])) {
-            return -1;
+            for(i = 0; i < 4; i++) {
+                r = 0;
+                if(buffer->stack[i] != 0) {
+                    g_array_append_val(dest, buffer->stack[i]);
+                    r++;
+                }
+            }
+            return -r;
         }
     }
 
-    ch = buffer->cho;
-    if(ch == HANJP_CHOSEONG_FILLER) {
-        buffer->cho = 0;
+    // Replace Choseong filler and Jungseong filler with '0'
+    for(i = 0; i < 4; i++) {
+        if(buffer->stack[i] == HANJP_CHOSEONG_FILLER || buffer->stack[i] == HANJP_JUNGSEONG_FILLER) {
+            buffer->stack[i] = 0;
+        }
     }
 
-    ch = buffer->jung;
-    if(ch == HANJP_JUNGSEONG_FILLER) {
-        buffer->jung = 0;
-    }
-
-    ch = buffer->jung2;
-    if(ch == HANJP_JUNGSEONG_FILLER) {
-        buffer->jung2 = 0;
-    }
-
-    // check batchim is available and move choseong to jongseong
+    // check whether batchim is available and move choseong to jongseong if conditions are met
     if(buffer->cho != 0 && buffer->jung == 0 && dest->len != 0) {
-        ch = g_array_index(dest, gunichar, dest->len - 1);
+        ch = g_array_index(dest, gunichar, dest->len - 1); // Last kana character
         if(ch != kana_nn && ch != kana_table[HANJP_CONSONANT_T][HANJP_VOWEL_U] - 1) {
             buffer->jong = hangul_choseong_to_jongseong(buffer->cho);
             buffer->cho = 0;
         }
     }
     
-    //eat choseong, jungseong
-    while(buffer->cho || buffer->jung) {
+    //eat Choseong and Jungseong
+    while(buffer->cho || buffer->jung || buffer->jung2) {
         adj = 0;
-        ch = buffer->cho;
+        ch = buffer->cho; // victim
         buffer->cho = 0;
+        // Select row index and set adjuster
         switch(ch) {
             case 0:         // VOID
             adj = -1;
@@ -265,8 +267,9 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
             case HANJP_CHOSEONG_NIEUN:         // ㄴ
             i = HANJP_CONSONANT_N; break;   // N
             case HANJP_CHOSEONG_PHIEUPH:       // ㅍ
-            adj = 1;
             case HANJP_CHOSEONG_SSANGPIEUP:    // ㅃ
+            adj = 1;
+            case HANJP_CHOSEONG_PIEUP:
             adj += 1;
             case HANJP_CHOSEONG_HIEUH:         // ㅎ
             i = HANJP_CONSONANT_H; break;   // H
@@ -279,11 +282,18 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
             r++;
             continue;
             default:
-            return -1;
+            for(i = 0; i < 4; i++) {
+                ch = buffer->stack[i];
+                if(ch != 0) {
+                    g_array_append_val(dest, ch);
+                    r++;
+                }
+            }
+            return -r;
         }
 
-        // reduce jung
-        ch = buffer->jung2;
+        // Reduce Jungseong to single character
+        ch = buffer->jung2; // victim
         buffer->jung2 = 0;
         if(buffer->jung == 0) {
             buffer->jung = ch;
@@ -300,7 +310,7 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
             }
         }
 
-        // divide jungseong
+        // Divide Jungseong into eatable
         ch = buffer->jung;
         switch(ch) {
             case HANJP_JUNGSEONG_WA:
@@ -332,7 +342,7 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
         }
 
         //select column index
-        ch = buffer->jung;
+        ch = buffer->jung; // victim
         buffer->jung = 0;
         switch(ch) {
             case HANJP_JUNGSEONG_WA:
@@ -355,7 +365,14 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
             case HANJP_JUNGSEONG_O:
             j = HANJP_VOWEL_O; break;
             default:
-            return FALSE;
+            for(i = 0; i < 4; i++) {
+                ch = buffer->stack[i];
+                if(ch != 0) {
+                    g_array_append_val(dest, ch);
+                    r++;
+                }
+            }
+            return -r;
         }
 
         ch = kana_table[i][j] + adj;
@@ -381,7 +398,7 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
             case HANJP_JONGSEONG_IEUNG:
             ch = kana_nn; break;
             default:
-            buffer->cho = hangul_jongseong_to_choseong(buffer->jong);
+            buffer->cho = hangul_jongseong_to_choseong(ch);
             return r + hanjp_am_base_to_kana(am, dest, buffer);
         }
         g_array_append_val(dest, ch);
@@ -487,9 +504,11 @@ hanjp_am_base_class_init(HanjpAutomataBaseClass *klass)
     klass->push = NULL;
     klass->backspace = hanjp_am_base_backspace;
     klass->flush = hanjp_am_base_flush;
-   
 }
 
+/**/
+
+/* AutomataBuiltin Implementation */
 static void hanjp_am_builtin_interface_init(HanjpAutomataInterface *iface);
 G_DEFINE_TYPE_WITH_CODE(HanjpAutomataBuiltin, hanjp_am_builtin, HANJP_TYPE_AM_BASE,
         G_IMPLEMENT_INTERFACE(HANJP_TYPE_AM,
@@ -565,3 +584,5 @@ hanjp_am_builtin_interface_init(HanjpAutomataInterface *iface)
     iface->backspace = hanjp_am_base_backspace;
     iface->flush = hanjp_am_base_flush;
 }
+
+/**/
