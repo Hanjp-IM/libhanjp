@@ -282,7 +282,14 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
             r++;
             continue;
             default:
-            return -1;
+            for(i = 0; i < 4; i++) {
+                ch = buffer->stack[i];
+                if(ch != 0) {
+                    g_array_append_val(dest, ch);
+                    r++;
+                }
+            }
+            return -r;
         }
 
         // Reduce Jungseong to single character
@@ -358,7 +365,14 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
             case HANJP_JUNGSEONG_O:
             j = HANJP_VOWEL_O; break;
             default:
-            return FALSE;
+            for(i = 0; i < 4; i++) {
+                ch = buffer->stack[i];
+                if(ch != 0) {
+                    g_array_append_val(dest, ch);
+                    r++;
+                }
+            }
+            return -r;
         }
 
         ch = kana_table[i][j] + adj;
