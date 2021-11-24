@@ -384,7 +384,7 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
             case HANJP_JONGSEONG_IEUNG:
             ch = kana_nn; break;
             default:
-            buffer->cho = hangul_jongseong_to_choseong(buffer->jong);
+            buffer->cho = hangul_jongseong_to_choseong(ch);
             return r + hanjp_am_base_to_kana(am, dest, buffer);
         }
         g_array_append_val(dest, ch);
