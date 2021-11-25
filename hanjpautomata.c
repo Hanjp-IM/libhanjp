@@ -132,26 +132,12 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
     priv = hanjp_am_base_get_instance_private(HANJP_AM_BASE(am));
 
     // Check buffer
-    for(i = 0; i < 4; i++) {
-        if(buffer->stack[i] != 0 && !hangul_is_jamo(buffer->stack[i])) {
-            for(i = 0; i < 4; i++) {
-                r = 0;
-                if(buffer->stack[i] != 0) {
-                    g_array_append_val(dest, buffer->stack[i]);
-                    r++;
-                }
-            }
-            return -r;
-        }
+	if (!hanjp_buffer_is_valid(buffer)) {
+		r = hanjp_buffer_copy_jamoes(buffer, dest);
+        return -r;
     }
 
-    // Replace Choseong filler and Jungseong filler with '0'
-    for(i = 0; i < 4; i++) {
-        if(buffer->stack[i] == HANGUL_CHOSEONG_FILLER
-				|| buffer->stack[i] == HANGUL_JUNGSEONG_FILLER) {
-            buffer->stack[i] = 0;
-        }
-    }
+    hanjp_buffer_clear_filler(buffer);
 
     // check whether batchim is available and move choseong to jongseong if conditions are met
     if(buffer->cho != 0 && buffer->jung == 0 && dest->len != 0) {
@@ -215,13 +201,7 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
             r++;
             continue;
         default:
-            for(i = 0; i < 4; i++) {
-                ch = buffer->stack[i];
-                if(ch != 0) {
-                    g_array_append_val(dest, ch);
-                    r++;
-                }
-            }
+			r += hanjp_buffer_copy_jamoes(buffer, dest);
             return -r;
         }
 
@@ -303,13 +283,7 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
             vowel_idx = KANA_VOWEL_O;
 			break;
         default:
-            for(i = 0; i < 4; i++) {
-                ch = buffer->stack[i];
-                if(ch != 0) {
-                    g_array_append_val(dest, ch);
-                    r++;
-                }
-            }
+			r += hanjp_buffer_copy_jamoes(buffer, dest);
             return -r;
         }
 
@@ -359,10 +333,7 @@ hanjp_am_base_peek(HanjpAutomata *am, GArray *hangul)
 
     priv = hanjp_am_base_get_instance_private(HANJP_AM_BASE(am));
 
-    if(priv->buffer.jung == 0) {
-        priv->buffer.jung = priv->buffer.jung2;
-        priv->buffer.jung2 = 0;
-    }
+	hanjp_buffer_align_jungseong(&priv->buffer);
     
     if(priv->buffer.jung != 0 && priv->buffer.jung2 != 0) {
         jungkey.jung = priv->buffer.jung;
@@ -414,11 +385,7 @@ hanjp_am_base_init(HanjpAutomataBase *am)
     HanjpAutomataBasePrivate *priv;
     priv = hanjp_am_base_get_instance_private(am);
 
-    priv->buffer.cho = 0;
-    priv->buffer.jung = 0;
-    priv->buffer.jung2 = 0;
-    priv->buffer.jong = 0;
-
+	hanjp_buffer_flush(&priv->buffer);
     priv->combine_table = g_hash_table_new(g_int64_hash, g_int64_equal);
 }
 

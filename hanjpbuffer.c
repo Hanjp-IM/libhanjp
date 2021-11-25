@@ -71,4 +71,51 @@ hanjp_buffer_flush(HanjpBuffer *buffer) {
     buffer->jong = 0;
 }
 
+bool
+hanjp_buffer_is_valid(HanjpBuffer *buffer) {
+	int i;
+
+	for (i = 0; i < BUFF_SIZE; i++) {
+		if (buffer->stack[i] && !hangul_is_jamo(buffer->stack[i])) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+gint
+hanjp_buffer_copy_jamoes(HanjpBuffer *buffer, GArray *arr) {
+	int i;
+	int copy_cnt = 0;
+
+	for (i = 0; i < BUFF_SIZE; i++) {
+		if (buffer->stack[i]) {
+			g_array_append_val(arr, buffer->stack[i]);
+			copy_cnt += 1;
+		}
+	}
+	return copy_cnt;
+}
+
+void
+hanjp_buffer_clear_filler(HanjpBuffer *buffer) {
+	int i;
+
+	for (i = 0; i < BUFF_SIZE; i++) {
+		if ((buffer->stack[i] == HANGUL_CHOSEONG_FILLER)
+				|| (buffer->stack[i] == HANGUL_JUNGSEONG_FILLER)) {
+			buffer->stack[i] = 0;
+		}
+	}
+}
+
+void
+hanjp_buffer_align_jungseong(HanjpBuffer *buffer) {
+	if (buffer->jung == 0) {
+		buffer->jung = buffer-> jung2;
+		buffer->jung2 = 0;
+	}
+}
+
 /**/
