@@ -30,8 +30,8 @@ enum {
 };
 
 // Fifty notes
-// For example か(ka) = kana_table[KANA_CONSONANT_K][KANA_VOWEL_A]
-static const gunichar kana_table[][5] = {
+// For example か(ka) = KANA_TABLE[KANA_CONSONANT_K][KANA_VOWEL_A]
+static const gunichar KANA_TABLE[][5] = {
     // A, I, U, E, O
     {0x3042, 0x3044, 0x3046, 0x3048, 0x304A}, // A
     {0x304B, 0x304D, 0x304F, 0x3051, 0x3053}, // KA
@@ -44,7 +44,8 @@ static const gunichar kana_table[][5] = {
     {0x3089, 0x308A, 0x308B, 0x308C, 0x308D}, // RA
     {0x308F, 0x3090, 0x0000, 0x3091, 0x3092}  // WA
 };
-static const gunichar kana_nn = 0x3093;
+static const gunichar KANA_SMALL_TU = 0x3063;
+static const gunichar KANA_NN = 0x3093;
 
 // Combine multiple JungSeong into single int code
 typedef union {
@@ -233,7 +234,7 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
     // check whether batchim is available and move choseong to jongseong if conditions are met
     if(buffer->cho != 0 && buffer->jung == 0 && dest->len != 0) {
         ch = g_array_index(dest, gunichar, dest->len - 1); // Last kana character
-        if(ch != kana_nn && ch != kana_table[KANA_CONSONANT_T][KANA_VOWEL_U] - 1) {
+        if(ch != KANA_NN && ch != KANA_SMALL_TU) {
             buffer->jong = hangul_choseong_to_jongseong(buffer->cho);
             buffer->cho = 0;
         }
@@ -245,8 +246,8 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
 		ch = hanjp_buffer_pop_choseong(buffer);
 		conv_err = choseong_to_kana_index(ch, &conso_idx, &diacrit);
 		if (conv_err && ch == HANGUL_CHOSEONG_SSANGNIEUN) {
-			// it directly converts into kana_nn
-			g_array_append_val(dest, kana_nn);
+			// it directly converts into KANA_NN
+			g_array_append_val(dest, KANA_NN);
 			r++;
 			continue;
 		} else if (conv_err) {
@@ -311,7 +312,7 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
 			return -r;
       	}
 		
-        ch = kana_table[conso_idx][vowel_idx] + diacrit;
+        ch = KANA_TABLE[conso_idx][vowel_idx] + diacrit;
         g_array_append_val(dest, ch);
         r++;
     }
@@ -325,14 +326,14 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
         case HANGUL_JONGSEONG_SIOS:
         case HANGUL_JONGSEONG_SSANGSIOS:
         case HANGUL_JONGSEONG_KHIEUKH:
-            ch = kana_table[KANA_CONSONANT_T][KANA_VOWEL_U] - 1;
+            ch = KANA_SMALL_TU;
 			break;
         case HANGUL_JONGSEONG_NIEUN:
         case HANGUL_JONGSEONG_MIEUM:
         case HANGUL_JONGSEONG_PIEUP:
         case HANGUL_JONGSEONG_PHIEUPH:
         case HANGUL_JONGSEONG_IEUNG:
-            ch = kana_nn;
+            ch = KANA_NN;
 			break;
         default:
             buffer->cho = hangul_jongseong_to_choseong(ch);
