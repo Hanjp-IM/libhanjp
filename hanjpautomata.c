@@ -119,11 +119,102 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(HanjpAutomataBase, hanjp_am_base, G_TYPE_OBJECT)
 
 static gint
+choseong_to_kana_index(gunichar cho, gint *conso_idx, gint *diacrit) {
+	gint ret = 0; // In normal indexing, it returns 0
+
+	*diacrit = 0;
+	// Select row index and set adjuster
+	switch (cho) {
+	case 0:         // VOID
+		*diacrit = -1;
+	case HANGUL_CHOSEONG_IEUNG:         // ㅇ
+		*conso_idx = KANA_CONSONANT__;
+		break;
+	case HANGUL_CHOSEONG_KIYEOK:        // ㄱ
+		*diacrit = 1;
+	case HANGUL_CHOSEONG_KHIEUKH:       // ㅋ
+	case HANGUL_CHOSEONG_SSANGKIYEOK:   // ㄲ
+		*conso_idx = KANA_CONSONANT_K;
+		break;
+	case HANGUL_CHOSEONG_CIEUC:         // ㅈ
+		*diacrit = 1;
+	case HANGUL_CHOSEONG_SIOS:          // ㅅ
+	case HANGUL_CHOSEONG_SSANGSIOS:     // ㅆ
+		*conso_idx = KANA_CONSONANT_S;
+		break;
+	case HANGUL_CHOSEONG_TIKEUT:        // ㄷ
+		*diacrit = 1;
+	case HANGUL_CHOSEONG_SSANGTIKEUT:   // ㄸ
+	case HANGUL_CHOSEONG_CHIEUCH:       // ㅊ
+	case HANGUL_CHOSEONG_THIEUTH:       // ㅌ
+		*conso_idx = KANA_CONSONANT_T;
+		break;
+	case HANGUL_CHOSEONG_NIEUN:         // ㄴ
+		*conso_idx = KANA_CONSONANT_N;
+		break;
+	case HANGUL_CHOSEONG_PHIEUPH:       // ㅍ
+	case HANGUL_CHOSEONG_SSANGPIEUP:    // ㅃ
+		*diacrit = 1;
+	case HANGUL_CHOSEONG_PIEUP:			// ㅂ
+		*diacrit += 1;
+	case HANGUL_CHOSEONG_HIEUH:         // ㅎ
+		*conso_idx = KANA_CONSONANT_H;
+		break;
+	case HANGUL_CHOSEONG_MIEUM:         // ㅁ
+		*conso_idx = KANA_CONSONANT_M;
+		break;
+	case HANGUL_CHOSEONG_RIEUL:         // ㄹ
+		*conso_idx = KANA_CONSONANT_R;
+		break;
+	case HANGUL_CHOSEONG_SSANGNIEUN:
+	default:
+		ret = -1;
+	}
+	return ret;
+}
+
+static gint
+jungseong_to_kana_index(gunichar jung, gint *vowel_idx) {
+	gint ret = 0; // In normal indexing, it returns 0
+
+	switch(jung) {
+	case HANGUL_JUNGSEONG_WA:
+	case HANGUL_JUNGSEONG_YA:
+	case HANGUL_JUNGSEONG_A:
+		*vowel_idx = KANA_VOWEL_A;
+		break;
+	case HANGUL_JUNGSEONG_I:
+		*vowel_idx = KANA_VOWEL_I;
+		break;
+	case HANGUL_JUNGSEONG_YU:
+	case HANGUL_JUNGSEONG_EU:
+	case HANGUL_JUNGSEONG_U:
+	case 0:
+		*vowel_idx = KANA_VOWEL_U;
+		break;
+	case HANGUL_JUNGSEONG_AE:
+	case HANGUL_JUNGSEONG_E:
+		*vowel_idx = KANA_VOWEL_E;
+		break;
+	case HANGUL_JUNGSEONG_YO:
+	case HANGUL_JUNGSEONG_YEO:
+	case HANGUL_JUNGSEONG_EO:
+	case HANGUL_JUNGSEONG_O:
+		*vowel_idx = KANA_VOWEL_O;
+		break;
+	default:
+		ret = -1;
+	}
+	return ret;
+}
+
+
+static gint
 hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
 {
     gint i, r = 0;
-    gint conso_idx, vowel_idx;
-    gint diacrit;
+    gint conso_idx, vowel_idx, diacrit;
+	gint conv_err;
     JungBox jungkey;
     gunichar ch;
     gunichar *val;
@@ -150,59 +241,18 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
     
     //eat Choseong and Jungseong
     while(buffer->cho || buffer->jung || buffer->jung2) {
-        diacrit = 0;
-        ch = hanjp_buffer_pop_choseong(buffer);
-        // Select row index and set adjuster
-        switch(ch) {
-        case 0:         // VOID
-            diacrit = -1;
-        case HANGUL_CHOSEONG_IEUNG:         // ㅇ
-        	conso_idx = KANA_CONSONANT__;
-			break;
-        case HANGUL_CHOSEONG_KIYEOK:        // ㄱ
-            diacrit = 1;
-        case HANGUL_CHOSEONG_KHIEUKH:       // ㅋ
-        case HANGUL_CHOSEONG_SSANGKIYEOK:   // ㄲ
-        	conso_idx = KANA_CONSONANT_K;
-			break;
-        case HANGUL_CHOSEONG_CIEUC:         // ㅈ
-            diacrit = 1;
-        case HANGUL_CHOSEONG_SIOS:          // ㅅ
-        case HANGUL_CHOSEONG_SSANGSIOS:     // ㅆ
-            conso_idx = KANA_CONSONANT_S;
-			break;
-        case HANGUL_CHOSEONG_TIKEUT:        // ㄷ
-            diacrit = 1;
-        case HANGUL_CHOSEONG_SSANGTIKEUT:   // ㄸ
-        case HANGUL_CHOSEONG_CHIEUCH:       // ㅊ
-        case HANGUL_CHOSEONG_THIEUTH:       // ㅌ
-            conso_idx = KANA_CONSONANT_T;
-			break;
-        case HANGUL_CHOSEONG_NIEUN:         // ㄴ
-            conso_idx = KANA_CONSONANT_N;
-			break;
-        case HANGUL_CHOSEONG_PHIEUPH:       // ㅍ
-        case HANGUL_CHOSEONG_SSANGPIEUP:    // ㅃ
-			diacrit = 1;
-		case HANGUL_CHOSEONG_PIEUP:			// ㅂ
-            diacrit += 1;
-        case HANGUL_CHOSEONG_HIEUH:         // ㅎ
-            conso_idx = KANA_CONSONANT_H;
-			break;
-        case HANGUL_CHOSEONG_MIEUM:         // ㅁ
-            conso_idx = KANA_CONSONANT_M;
-			break;
-        case HANGUL_CHOSEONG_RIEUL:         // ㄹ
-            conso_idx = KANA_CONSONANT_R;
-			break;
-        case HANGUL_CHOSEONG_SSANGNIEUN:
-            g_array_append_val(dest, kana_nn);
-            r++;
-            continue;
-        default:
+ 		// Convert choseong into kana indexing
+		ch = hanjp_buffer_pop_choseong(buffer);
+		conv_err = choseong_to_kana_index(ch, &conso_idx, &diacrit);
+		if (conv_err && ch == HANGUL_CHOSEONG_SSANGNIEUN) {
+			// it directly converts into kana_nn
+			g_array_append_val(dest, kana_nn);
+			r++;
+			continue;
+		} else if (conv_err) {
 			r += hanjp_buffer_copy_jamoes(buffer, dest);
-            return -r;
-        }
+			return -r;
+		}
 
         // Reduce Jungseong to single character
         ch = buffer->jung2; // victim
@@ -255,36 +305,12 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
 
         //select column index
         ch = hanjp_buffer_pop_jungseong(buffer); // victim
-        switch(ch) {
-        case HANGUL_JUNGSEONG_WA:
-        case HANGUL_JUNGSEONG_YA:
-        case HANGUL_JUNGSEONG_A:
-            vowel_idx = KANA_VOWEL_A;
-			break;
-        case HANGUL_JUNGSEONG_I:
-            vowel_idx = KANA_VOWEL_I;
-			break;
-        case HANGUL_JUNGSEONG_YU:
-        case HANGUL_JUNGSEONG_EU:
-        case HANGUL_JUNGSEONG_U:
-        case 0:
-            vowel_idx = KANA_VOWEL_U;
-			break;
-        case HANGUL_JUNGSEONG_AE:
-        case HANGUL_JUNGSEONG_E:
-            vowel_idx = KANA_VOWEL_E;
-			break;
-        case HANGUL_JUNGSEONG_YO:
-        case HANGUL_JUNGSEONG_YEO:
-        case HANGUL_JUNGSEONG_EO:
-        case HANGUL_JUNGSEONG_O:
-            vowel_idx = KANA_VOWEL_O;
-			break;
-        default:
+ 		conv_err = jungseong_to_kana_index(ch, &vowel_idx);
+		if (conv_err) {
 			r += hanjp_buffer_copy_jamoes(buffer, dest);
-            return -r;
-        }
-
+			return -r;
+      	}
+		
         ch = kana_table[conso_idx][vowel_idx] + diacrit;
         g_array_append_val(dest, ch);
         r++;
