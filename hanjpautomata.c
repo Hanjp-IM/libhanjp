@@ -174,6 +174,41 @@ choseong_to_kana_index(gunichar cho, gint *conso_idx, gint *diacrit) {
 	return ret;
 }
 
+static void
+divide_jungseong(HanjpBuffer *buffer, gint *conso_idx)
+{
+	switch (buffer->jung) {
+	case HANGUL_JUNGSEONG_WA:
+		if(*conso_idx == KANA_CONSONANT__) {
+			*conso_idx = KANA_CONSONANT_W;
+		}
+		else {
+			buffer->jung = HANGUL_JUNGSEONG_O;
+			buffer->jung2 = HANGUL_JUNGSEONG_A;
+		}
+		break;
+	case HANGUL_JUNGSEONG_YA:
+	case HANGUL_JUNGSEONG_YU:
+	case HANGUL_JUNGSEONG_YO:
+	case HANGUL_JUNGSEONG_YEO:
+		if(*conso_idx == KANA_CONSONANT__) {
+			*conso_idx = KANA_CONSONANT_Y;
+		}
+		else{
+			// Insert Jungseong_I before existing jungseong
+			buffer->jung2 = buffer->jung;
+			buffer->jung = HANGUL_JUNGSEONG_I;
+		}
+		break;
+	case HANGUL_JUNGSEONG_YE:
+	case HANGUL_JUNGSEONG_YAE:
+		buffer->jung = HANGUL_JUNGSEONG_I;
+		buffer->jung2 = HANGUL_JUNGSEONG_E;
+		break;
+	}
+}
+
+ 
 static gint
 jungseong_to_kana_index(gunichar jung, gint *vowel_idx) {
 	gint ret = 0; // In normal indexing, it returns 0
@@ -209,6 +244,33 @@ jungseong_to_kana_index(gunichar jung, gint *vowel_idx) {
 	return ret;
 }
 
+static gint
+jongseong_to_kana(gunichar jong, gunichar *kana) {
+	gint ret = 0; // In normal conversion, it returns 0
+
+	switch (jong) {
+	case HANGUL_JONGSEONG_KIYEOK:
+	case HANGUL_JONGSEONG_SSANGKIYEOK:
+	case HANGUL_JONGSEONG_SIOS:
+	case HANGUL_JONGSEONG_SSANGSIOS:
+	case HANGUL_JONGSEONG_KHIEUKH:
+		*kana = KANA_SMALL_TU;
+		break;
+	case HANGUL_JONGSEONG_NIEUN:
+	case HANGUL_JONGSEONG_MIEUM:
+	case HANGUL_JONGSEONG_PIEUP:
+	case HANGUL_JONGSEONG_PHIEUPH:
+	case HANGUL_JONGSEONG_IEUNG:
+		*kana = KANA_NN;
+		break;
+	case 0:
+		*kana = 0;
+		break;
+	default:
+		ret = -1;
+	}
+	return ret;
+}
 
 static gint
 hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
@@ -268,36 +330,8 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
         }
 
         // Divide Jungseong into eatable
-        jamo = buffer->jung;
-        switch(jamo) {
-        case HANGUL_JUNGSEONG_WA:
-            if(conso_idx == KANA_CONSONANT__) {
-                conso_idx = KANA_CONSONANT_W;
-            }
-            else {
-                buffer->jung = HANGUL_JUNGSEONG_O;
-                buffer->jung2 = HANGUL_JUNGSEONG_A;
-            }
-            break;
-        case HANGUL_JUNGSEONG_YA:
-        case HANGUL_JUNGSEONG_YU:
-        case HANGUL_JUNGSEONG_YO:
-        case HANGUL_JUNGSEONG_YEO:
-            if(conso_idx == KANA_CONSONANT__) {
-                conso_idx = KANA_CONSONANT_Y;
-            }
-            else{
-                buffer->jung = HANGUL_JUNGSEONG_I;
-                buffer->jung2 = jamo;
-            }
-            break;
-        case HANGUL_JUNGSEONG_YE:
-        case HANGUL_JUNGSEONG_YAE:
-            buffer->jung = HANGUL_JUNGSEONG_I;
-            buffer->jung2 = HANGUL_JUNGSEONG_E;
-            break;
-        }
-
+		divide_jungseong(buffer, &conso_idx);
+		
         //select column index
         jamo = hanjp_buffer_pop_jungseong(buffer); // victim
  		conv_err = jungseong_to_kana_index(jamo, &vowel_idx);
@@ -306,6 +340,7 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
 			return -r;
       	}
 		
+		// indexing done, convert into kana
         kana = KANA_TABLE[conso_idx][vowel_idx] + diacrit;
         g_array_append_val(dest, kana);
         r++;
@@ -313,27 +348,15 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
 
     // eat jongseong
     jamo = hanjp_buffer_pop_jongseong(buffer);
-    if (jamo != 0) {
-        switch (jamo) {
-        case HANGUL_JONGSEONG_KIYEOK:
-        case HANGUL_JONGSEONG_SSANGKIYEOK:
-        case HANGUL_JONGSEONG_SIOS:
-        case HANGUL_JONGSEONG_SSANGSIOS:
-        case HANGUL_JONGSEONG_KHIEUKH:
-            kana = KANA_SMALL_TU;
-			break;
-        case HANGUL_JONGSEONG_NIEUN:
-        case HANGUL_JONGSEONG_MIEUM:
-        case HANGUL_JONGSEONG_PIEUP:
-        case HANGUL_JONGSEONG_PHIEUPH:
-        case HANGUL_JONGSEONG_IEUNG:
-            kana = KANA_NN;
-			break;
-        default:
-            jamo = hangul_jongseong_to_choseong(jamo);
-			hanjp_buffer_push(buffer, jamo);
-            return r + hanjp_am_base_to_kana(am, dest, buffer);
-        }
+	conv_err = jongseong_to_kana(jamo, &kana);
+	if (conv_err) {
+		// promote jongseong into choseong and retry convert
+        jamo = hangul_jongseong_to_choseong(jamo);
+		hanjp_buffer_push(buffer, jamo);
+        r += hanjp_am_base_to_kana(am, dest, buffer);
+    }
+	else if (jamo != 0) {
+		// When jamo were not empty, it may converted
         g_array_append_val(dest, kana);
         r++;
     }
