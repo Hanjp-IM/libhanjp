@@ -118,4 +118,28 @@ hanjp_buffer_align_jungseong(HanjpBuffer *buffer) {
 	}
 }
 
+gunichar
+hanjp_buffer_pop_choseong(HanjpBuffer *buffer) {
+	gunichar ch = buffer->cho;
+	buffer->cho = 0;
+
+	return ch;
+}
+
+gunichar
+hanjp_buffer_pop_jungseong(HanjpBuffer *buffer) {
+	gunichar ch = buffer->jung;
+	buffer->jung = 0;
+
+	return ch;
+}
+
+gunichar
+hanjp_buffer_pop_jongseong(HanjpBuffer *buffer) {
+	gunichar ch = buffer->jong;
+	buffer->jong = 0;
+
+	return ch;
+}
+
 /**/

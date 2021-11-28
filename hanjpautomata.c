@@ -151,8 +151,7 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
     //eat Choseong and Jungseong
     while(buffer->cho || buffer->jung || buffer->jung2) {
         diacrit = 0;
-        ch = buffer->cho; // victim
-        buffer->cho = 0;
+        ch = hanjp_buffer_pop_choseong(buffer);
         // Select row index and set adjuster
         switch(ch) {
         case 0:         // VOID
@@ -255,8 +254,7 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
         }
 
         //select column index
-        ch = buffer->jung; // victim
-        buffer->jung = 0;
+        ch = hanjp_buffer_pop_jungseong(buffer); // victim
         switch(ch) {
         case HANGUL_JUNGSEONG_WA:
         case HANGUL_JUNGSEONG_YA:
@@ -293,8 +291,7 @@ hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *buffer)
     }
 
     // eat jongseong
-    ch = buffer->jong;
-    buffer->jong = 0;
+    ch = hanjp_buffer_pop_jongseong(buffer);
     if(ch != 0) {
         switch(ch) {
         case HANGUL_JONGSEONG_KIYEOK:

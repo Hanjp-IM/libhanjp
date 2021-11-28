@@ -25,4 +25,8 @@ extern gint hanjp_buffer_copy_jamoes(HanjpBuffer *buffer, GArray *arr);
 extern void hanjp_buffer_clear_filler(HanjpBuffer *buffer);
 extern void hanjp_buffer_align_jungseong(HanjpBuffer *buffer);
 
+extern gunichar hanjp_buffer_pop_choseong(HanjpBuffer *buffer);
+extern gunichar hanjp_buffer_pop_jungseong(HanjpBuffer *buffer);
+extern gunichar hanjp_buffer_pop_jongseong(HanjpBuffer *buffer);
+
 #endif //__HANJP_BUFFER_H__
