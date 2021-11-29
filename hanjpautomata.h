@@ -3,18 +3,9 @@
 
 #include <glib-object.h>
 #include <gmodule.h>
+#include "hanjpbuffer.h"
 
 G_BEGIN_DECLS
-
-typedef union {
-    struct {
-        gunichar cho;
-        gunichar jung;
-        gunichar jung2;
-        gunichar jong;
-    };
-    gunichar stack[4];
-} HanjpBuffer;
 
 #define HANJP_TYPE_AM hanjp_am_get_type()
 G_DECLARE_INTERFACE(HanjpAutomata, hanjp_am, HANJP, AM, GObject)
