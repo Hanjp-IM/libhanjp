@@ -48,6 +48,15 @@ static const gunichar KANA_TABLE[][5] = {
 static const gunichar KANA_SMALL_TU = 0x3063;
 static const gunichar KANA_NN = 0x3093;
 
+/* Jamo to Kana conversion */
+#define KANA_CONV_SUCCESS  (0)
+#define KANA_CONV_FAIL     (-1)
+
+static gint choseong_to_kana_index(gunichar cho, gint *conso_idx, gint *diacrit);
+static gint jungseong_to_kana_index(gunichar jung, gint *vowel_idx);
+static gint jongseong_to_kana(gunichar jong, gunichar *kana);
+
+
 // Combine multiple JungSeong into single int code
 typedef union
 {
@@ -134,10 +143,7 @@ G_DEFINE_TYPE_WITH_PRIVATE(HanjpAutomataBase, hanjp_am_base, G_TYPE_OBJECT)
 
 static gint choseong_to_kana_index(gunichar cho, gint *conso_idx, gint *diacrit)
 {
-    gint ret = 0; // In normal indexing, it returns 0
-
     *diacrit = 0;
-    // Select row index and set adjuster
     switch (cho) {
     case 0:         // VOID
         *diacrit = -1;
@@ -182,10 +188,10 @@ static gint choseong_to_kana_index(gunichar cho, gint *conso_idx, gint *diacrit)
         break;
     case HANGUL_CHOSEONG_SSANGNIEUN:
     default:
-        ret = -1;
+        return KANA_CONV_FAIL;
     }
 
-    return ret;
+    return KANA_CONV_SUCCESS;
 }
 
 
@@ -223,8 +229,6 @@ static void divide_jungseong(HanjpBuffer *buffer, gint *conso_idx)
  
 static gint jungseong_to_kana_index(gunichar jung, gint *vowel_idx)
 {
-    gint ret = 0; // In normal indexing, it returns 0
-
     switch (jung) {
     case HANGUL_JUNGSEONG_WA:
     case HANGUL_JUNGSEONG_YA:
@@ -251,16 +255,15 @@ static gint jungseong_to_kana_index(gunichar jung, gint *vowel_idx)
         *vowel_idx = KANA_VOWEL_O;
         break;
     default:
-        ret = -1;
+        return KANA_CONV_FAIL;
     }
-    return ret;
+
+    return KANA_CONV_SUCCESS;
 }
 
 
 static gint jongseong_to_kana(gunichar jong, gunichar *kana)
 {
-    gint ret = 0; // In normal conversion, it returns 0
-
     switch (jong) {
     case HANGUL_JONGSEONG_KIYEOK:
     case HANGUL_JONGSEONG_SSANGKIYEOK:
@@ -280,9 +283,10 @@ static gint jongseong_to_kana(gunichar jong, gunichar *kana)
         *kana = 0;
         break;
     default:
-        ret = -1;
+        return KANA_CONV_FAIL;
     }
-    return ret;
+
+    return KANA_CONV_SUCCESS;
 }
 
 
