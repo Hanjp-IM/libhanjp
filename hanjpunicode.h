@@ -5,7 +5,7 @@
 
 // syllable leading consonants Jamo (초성)
 enum {
-	// modern Hangul leading consonants
+    // modern Hangul leading consonants
     HANGUL_CHOSEONG_KIYEOK = 0x1100,
     HANGUL_CHOSEONG_SSANGKIYEOK,
     HANGUL_CHOSEONG_NIEUN,

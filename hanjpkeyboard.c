@@ -8,7 +8,7 @@ G_DEFINE_INTERFACE(HanjpKeyboard, hanjp_kb, G_TYPE_OBJECT)
 
 static void
 hanjp_kb_default_init(HanjpKeyboardInterface *iface) {
-	// Nothing to do
+    // Nothing to do
 }
 
 gunichar hanjp_kb_get_mapping(HanjpKeyboard* self, gint tableid, gint ascii)
@@ -42,9 +42,9 @@ hanjp_kb_builtin_get_mapping(HanjpKeyboard *self, gint tableid, gint ascii)
 {
     HanjpKeyboardBuiltinPrivate *priv;
     priv = hanjp_kb_builtin_get_instance_private(HANJP_KB_BUILTIN(self));
-	g_return_if_fail(priv->keyboard != NULL);
+    g_return_if_fail(priv->keyboard != NULL);
 
-	return hangul_keyboard_get_mapping(priv->keyboard, tableid, ascii);
+    return hangul_keyboard_get_mapping(priv->keyboard, tableid, ascii);
 }
 
 static void 
