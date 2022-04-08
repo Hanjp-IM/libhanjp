@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 #include "hanjpinputcontext.h"
 
-class InputContextTest : public ::testing::Test {
+class InputContextTest : public ::testing::Test
+{
 protected:
     void SetUp() override {
         // Create context object for each tests
@@ -16,7 +17,8 @@ protected:
     HanjpInputContext *context;
 };
 
-TEST_F(InputContextTest, IC_Hajimemashite) {
+TEST_F(InputContextTest, IC_Hajimemashite)
+{
     const char *strGivenKeyInput = "gkwlapaktlxp.";
     const char *strExpectJapanese = "はじめまして.";
     const char *strActualJapanese = NULL;
@@ -38,7 +40,8 @@ TEST_F(InputContextTest, IC_Hajimemashite) {
     g_array_unref(committed);
 }
 
-TEST_F(InputContextTest, IC_KYOUWAKOKU) {
+TEST_F(InputContextTest, IC_KYOUWAKOKU)
+{
     const char *strGivenKeyInput = "zydndhkzhzn.";
     const char *strExpectJapenese = "きょうわこく.";
     const char *strActualJapanese = NULL;

@@ -4,7 +4,8 @@
 #include "hanjpinputcontext.h"
 
 
-TEST(GObjectConstructDisposeTest, AutomataDefaultConstructDispose) {
+TEST(GObjectConstructDisposeTest, AutomataDefaultConstructDispose)
+{
     // Given HanjpAutomataDefault object
     HanjpAutomataBuiltin *amBuiltin = NULL;
     const char* strExpectObjType = "HanjpAutomataBuiltin";
@@ -30,7 +31,8 @@ TEST(GObjectConstructDisposeTest, AutomataDefaultConstructDispose) {
 }
 
 
-TEST(GObjectConstructDisposeTest, KeyboardDefaultConstructDispose) {
+TEST(GObjectConstructDisposeTest, KeyboardDefaultConstructDispose)
+{
     // Given HanjpKeyboardDefault object
     HanjpKeyboardBuiltin *kbBuiltin = NULL;
     const char* strExpectObjType = "HanjpKeyboardBuiltin";
@@ -56,7 +58,8 @@ TEST(GObjectConstructDisposeTest, KeyboardDefaultConstructDispose) {
 }
 
 
-TEST(GObjectConstructDisposeTest, InputContextConstructDispose) {
+TEST(GObjectConstructDisposeTest, InputContextConstructDispose)
+{
     // Given HanjpInputContext object
     HanjpInputContext *ic = NULL;
     const char* strExpectObjType = "HanjpInputContext";
