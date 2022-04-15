@@ -5,8 +5,10 @@
 #include <gmodule.h>
 #include <stdbool.h>
 
-typedef union {
-    struct {
+typedef union
+{
+    struct
+    {
         gunichar cho;
         gunichar jung;
         gunichar jung2;

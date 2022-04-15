@@ -4,8 +4,9 @@
 // The belows are Unicode presets for Hangul syllables
 
 // syllable leading consonants Jamo (초성)
-enum {
-	// modern Hangul leading consonants
+enum
+{
+    // modern Hangul leading consonants
     HANGUL_CHOSEONG_KIYEOK = 0x1100,
     HANGUL_CHOSEONG_SSANGKIYEOK,
     HANGUL_CHOSEONG_NIEUN,
@@ -105,7 +106,8 @@ enum {
 };
 
 // syllable medial vowels Jamo (중성)
-enum {
+enum
+{
     // modern Hangul medial vowels
     HANGUL_JUNGSEONG_A = 0x1161,
     HANGUL_JUNGSEONG_AE,
@@ -181,8 +183,9 @@ enum {
     HANGUL_JUNGSEONG_O_YAE
 };
 
-// syllable trailing consonants jamo (초성)
-enum {
+// syllable trailing consonants jamo (종성)
+enum
+{
     // modern Hangul trailing consonants
     HANGUL_JONGSEONG_KIYEOK = 0x11A8,       // ㄱ
     HANGUL_JONGSEONG_SSANGKIYEOK,  // ㄲ
