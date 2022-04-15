@@ -1,8 +1,13 @@
 #include "hanjpkeyboard.h"
 #include "hangul.h"
 
+// Extern function signature which isn't exported in libhangul header
 extern ucschar hangul_keyboard_get_mapping(const HangulKeyboard* keyboard, int tableid, unsigned key);
 
+
+/*
+ * Keyboard Interface Definition
+ */
 G_DEFINE_INTERFACE(HanjpKeyboard, hanjp_kb, G_TYPE_OBJECT)
 
 

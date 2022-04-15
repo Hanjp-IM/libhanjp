@@ -183,7 +183,7 @@ enum
     HANGUL_JUNGSEONG_O_YAE
 };
 
-// syllable trailing consonants jamo (초성)
+// syllable trailing consonants jamo (종성)
 enum
 {
     // modern Hangul trailing consonants

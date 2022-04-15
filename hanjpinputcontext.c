@@ -47,7 +47,7 @@ static void hanjp_ic_dispose(GObject *self)
     g_array_unref(priv->hangul);
     priv->hangul = NULL;
 
-    //chain up
+    // chain up
     G_OBJECT_CLASS(hanjp_ic_parent_class)->dispose(self);
 }
 
@@ -134,16 +134,16 @@ gint hanjp_ic_process(HanjpInputContext *self, gint ascii)
     g_return_if_fail(HANJP_IS_INPUTCONTEXT(self));
     priv = hanjp_ic_get_instance_private(self);
 
-    //map jaso from ascii
+    // map jaso from ascii
     ch = hanjp_kb_get_mapping(priv->keyboard, 0, ascii);
     if (ch == 0) {
         ch = (gunichar)ascii;
     }
-    //shrink preedit before push
+    // shrink preedit before push
     g_array_set_size(priv->preedit, priv->kana_len);
     g_array_set_size(priv->committed, 0);
     g_array_set_size(priv->hangul, 0);
-    //push jaso into automata
+    // push jaso into automata
     res = hanjp_am_push(priv->cur_am, priv->preedit, priv->hangul, ch);
 
     if (res < 0) {

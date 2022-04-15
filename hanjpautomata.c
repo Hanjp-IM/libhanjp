@@ -3,22 +3,25 @@
 #include <gmodule.h>
 #include <hangul.h>
 
-/* Extern function signature which isn't exported in libhangul header */
+// Extern function signature which aren't exported in libhangul header
 extern ucschar hangul_choseong_to_jongseong(ucschar c);
 extern ucschar hangul_jongseong_to_choseong(ucschar c);
 
-/* Kana Table index enums */
+
+/*
+ * Kana Table
+ */
+// table indexing enums
 enum
 {
-    KANA_VOWEL_A,
+    // Vowel indices
+    KANA_VOWEL_A = 0,
     KANA_VOWEL_I,
     KANA_VOWEL_U,
     KANA_VOWEL_E,
-    KANA_VOWEL_O
-};
-enum
-{
-    KANA_CONSONANT__,
+    KANA_VOWEL_O,
+    // Consonant indices
+    KANA_CONSONANT__ = 0,
     KANA_CONSONANT_K,
     KANA_CONSONANT_S,
     KANA_CONSONANT_T,
@@ -30,28 +33,30 @@ enum
     KANA_CONSONANT_W
 };
 
-// Fifty notes
-// For example か(ka) = KANA_TABLE[KANA_CONSONANT_K][KANA_VOWEL_A]
+// Fifty notes, ex. か(ka) = KANA_TABLE[KANA_CONSONANT_K][KANA_VOWEL_A]
 static const gunichar KANA_TABLE[][5] = {
-    // A, I, U, E, O
-    {0x3042, 0x3044, 0x3046, 0x3048, 0x304A}, // A
-    {0x304B, 0x304D, 0x304F, 0x3051, 0x3053}, // KA
-    {0x3055, 0x3057, 0x3059, 0x305B, 0x305D}, // SA
-    {0x305F, 0x3061, 0x3064, 0x3066, 0x3068}, // TA
-    {0x306A, 0x306B, 0x306C, 0x306D, 0x306E}, // NA
-    {0x306F, 0x3072, 0x3075, 0x3078, 0x307B}, // HA
-    {0x307E, 0x307F, 0x3080, 0x3081, 0x3082}, // MO
-    {0x3084, 0x0000, 0x3086, 0x0000, 0x3088}, // YA
-    {0x3089, 0x308A, 0x308B, 0x308C, 0x308D}, // RA
-    {0x308F, 0x3090, 0x0000, 0x3091, 0x3092}  // WA
+    //    _A,     _I,     _U,     _E,     _O
+    { 0x3042, 0x3044, 0x3046, 0x3048, 0x304A }, //  _
+    { 0x304B, 0x304D, 0x304F, 0x3051, 0x3053 }, // K_
+    { 0x3055, 0x3057, 0x3059, 0x305B, 0x305D }, // S_
+    { 0x305F, 0x3061, 0x3064, 0x3066, 0x3068 }, // T_
+    { 0x306A, 0x306B, 0x306C, 0x306D, 0x306E }, // N_
+    { 0x306F, 0x3072, 0x3075, 0x3078, 0x307B }, // H_
+    { 0x307E, 0x307F, 0x3080, 0x3081, 0x3082 }, // M_
+    { 0x3084, 0x0000, 0x3086, 0x0000, 0x3088 }, // Y_
+    { 0x3089, 0x308A, 0x308B, 0x308C, 0x308D }, // R_
+    { 0x308F, 0x3090, 0x0000, 0x3091, 0x3092 }  // W_
 };
+
+// Other Kana characters (which cannot be indexed through KANA_TABLE
 static const gunichar KANA_SMALL_TU = 0x3063;
 static const gunichar KANA_NN = 0x3093;
 
-/* Jamo to Kana conversion */
+// Jamo to Kana conversion results
 #define KANA_CONV_SUCCESS  (0)
 #define KANA_CONV_FAIL     (-1)
 
+// Jamo to Kana conversion functions
 static gint choseong_to_kana_index(gunichar cho, gint *conso_idx, gint *diacrit);
 static gint jungseong_to_kana_index(gunichar jung, gint *vowel_idx);
 static gint jongseong_to_kana(gunichar jong, gunichar *kana);
@@ -71,13 +76,15 @@ typedef union
 #define N_COMBINE_TABLE_ELEMENTS 30
 
 
-/* Automata Interface Definition */
+/*
+ * Automata Interface Definition
+ */
 G_DEFINE_INTERFACE(HanjpAutomata, hanjp_am, G_TYPE_OBJECT)
 
 
 static void hanjp_am_default_init(HanjpAutomataInterface *iface)
 {
-    /* add properties and signals to the interface here */
+    // Nothing to do
 }
 
 
@@ -129,7 +136,9 @@ void hanjp_am_flush(HanjpAutomata *am)
 }
 
 
-/* AutomataBase Implementation */
+/*
+ * AutomataBase Implementation
+ */
 typedef struct
 {
     HanjpBuffer buffer;
@@ -137,6 +146,7 @@ typedef struct
     JungBox combine_table_keys[N_COMBINE_TABLE_ELEMENTS];
     guint32 combine_table_vals[N_COMBINE_TABLE_ELEMENTS];
 } HanjpAutomataBasePrivate;
+
 
 G_DEFINE_TYPE_WITH_PRIVATE(HanjpAutomataBase, hanjp_am_base, G_TYPE_OBJECT)
 
@@ -226,7 +236,7 @@ static void divide_jungseong(HanjpBuffer *buffer, gint *conso_idx)
     }
 }
 
- 
+
 static gint jungseong_to_kana_index(gunichar jung, gint *vowel_idx)
 {
     switch (jung) {
@@ -310,7 +320,7 @@ static gint hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *
 
     hanjp_buffer_clear_filler(buffer);
 
-    // check whether batchim is available and move choseong to jongseong if conditions are met
+    // When Batchim is available, then move choseong to jongseong
     if (buffer->cho != 0 && buffer->jung == 0 && dest->len != 0) {
         kana = g_array_index(dest, gunichar, dest->len - 1); // Last kana character
         if(kana != KANA_NN && kana != KANA_SMALL_TU) {
@@ -319,7 +329,7 @@ static gint hanjp_am_base_to_kana(HanjpAutomata *am, GArray *dest, HanjpBuffer *
         }
     }
     
-    //eat Choseong and Jungseong
+    // eat Choseong and Jungseong
     while (buffer->cho || buffer->jung || buffer->jung2) {
         // Convert choseong into kana indexing
         jamo = hanjp_buffer_pop_choseong(buffer);
@@ -471,11 +481,12 @@ static void hanjp_am_base_class_init(HanjpAutomataBaseClass *klass)
 }
 
 
-/* AutomataBuiltin Implementation */
+/*
+ * AutomataBuiltin Implementation
+ */
 static void hanjp_am_builtin_interface_init(HanjpAutomataInterface *iface);
 G_DEFINE_TYPE_WITH_CODE(HanjpAutomataBuiltin, hanjp_am_builtin, HANJP_TYPE_AM_BASE,
-        G_IMPLEMENT_INTERFACE(HANJP_TYPE_AM,
-                hanjp_am_builtin_interface_init))
+        G_IMPLEMENT_INTERFACE(HANJP_TYPE_AM, hanjp_am_builtin_interface_init))
 
 
 static void hanjp_am_builtin_init(HanjpAutomataBuiltin *am)
@@ -547,5 +558,4 @@ static void hanjp_am_builtin_interface_init(HanjpAutomataInterface *iface)
     iface->backspace = hanjp_am_base_backspace;
     iface->flush = hanjp_am_base_flush;
 }
-
 /**/

@@ -2,7 +2,7 @@
 #include <gmodule.h>
 #include <hangul.h>
 
-/* Extern function signature which isn't exported in libhangul header */
+// Extern function signature which aren't exported in libhangul header
 extern ucschar hangul_choseong_to_jongseong(ucschar c);
 extern ucschar hangul_jongseong_to_choseong(ucschar c);
 
@@ -10,7 +10,9 @@ static const int BUFF_SIZE =
     (sizeof(((HanjpBuffer*)0)->stack) / sizeof(((HanjpBuffer*)0)->stack[0]));
 
 
-/* HanjpBuffer Implementation */
+/*
+ * HanjpBuffer Implementation
+ */
 gunichar hanjp_buffer_push(HanjpBuffer *buffer, gunichar ch)
 {
     if ((hangul_is_choseong(ch)) && (buffer->cho == 0)) {
